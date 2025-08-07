@@ -47,7 +47,8 @@ RdkCellularManager_gtest_bin_CPPFLAGS = -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)
                                         -I$(top_srcdir)/../CcspCommonLibrary/source/cosa/include/ \
                                         -I$(top_srcdir)/../CcspCommonLibrary/source/ccsp/components/include/ \
                                         -I${top_srcdir}/source/TR-181/middle_layer_src \
-                                        -DUNIT_TEST_DOCKER_SUPPORT
+                                        -DUNIT_TEST_DOCKER_SUPPORT \
+                                        -DCELLULAR_MGR_LITE
 
 RdkCellularManager_gtest_bin_SOURCES =  ../CellularManager/cellularmgr_sm.c \
                                         ../CellularManager/cellularmgr_bus_utils.c \
