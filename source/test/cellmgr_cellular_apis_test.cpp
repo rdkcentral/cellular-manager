@@ -31,9 +31,6 @@
 #define MOCK_CELLULAR_MGR_SM_2
 #define MOCK_CELLULAR_MGR_PTHREAD_2
 
-int Parse_Partners_Defaults_KeyValue(char* key, char* value);
-char *read_file(const char *filename);
-
 extern "C"
 {
 #include "cellular_hal.h"
@@ -47,6 +44,9 @@ extern CellularMGR_rbusSubListSt gRBUSSubListSt;
 #endif
 extern cJSON* entry_json;
 }
+
+int Parse_Partners_Defaults_KeyValue(char* key, char* value);
+char *read_file(const char *filename);
 
 PBACKEND_MANAGER_OBJECT               g_pBEManager;
 using namespace std;
