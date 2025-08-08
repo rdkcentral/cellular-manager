@@ -42,10 +42,11 @@ extern "C"
 #include "cellularmgr_rbus_events.h"
 extern CellularMGR_rbusSubListSt gRBUSSubListSt;
 #endif
-int Parse_Partners_Defaults_KeyValue(char* key, char* value);
-char *read_file(const char *filename);
 extern cJSON* entry_json;
 }
+
+int Parse_Partners_Defaults_KeyValue(char* key, char* value);
+char *read_file(const char *filename);
 
 PBACKEND_MANAGER_OBJECT               g_pBEManager;
 using namespace std;
