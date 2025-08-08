@@ -31,6 +31,9 @@
 #define MOCK_CELLULAR_MGR_SM_2
 #define MOCK_CELLULAR_MGR_PTHREAD_2
 
+int Parse_Partners_Defaults_KeyValue(char* key, char* value);
+char *read_file(const char *filename);
+
 extern "C"
 {
 #include "cellular_hal.h"
@@ -42,8 +45,6 @@ extern "C"
 #include "cellularmgr_rbus_events.h"
 extern CellularMGR_rbusSubListSt gRBUSSubListSt;
 #endif
-int Parse_Partners_Defaults_KeyValue(char* key, char* value);
-char *read_file(const char *filename);
 extern cJSON* entry_json;
 }
 
