@@ -21,8 +21,8 @@ jobs:
 
       - name: Install nanomsg dependency
         run: |
-         sudo apt-get update
-         sudo apt-get install -y libnanomsg-dev
+         apt-get update
+         apt-get install -y libnanomsg-dev
 
       - name: Run unit tests
         run: sh -c source/test/run_ut.sh
