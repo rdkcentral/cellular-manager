@@ -21,22 +21,6 @@
 #include <mocks/mock_msgpack.h>
 #include <mocks/mock_cJSON.h>
 
-extern "C"
-{
-#include "cellular_hal.h"
-#include "cellularmgr_cellular_apis.h"
-#include "cellularmgr_bus_utils.h"
-#include "cellularmgr_sm.h"
-#ifdef RBUS_BUILD_FLAG_ENABLE
-#include <rbus/rbus.h>
-#include "cellularmgr_rbus_events.h"
-extern CellularMGR_rbusSubListSt gRBUSSubListSt;
-#endif
-int Parse_Partners_Defaults_KeyValue(char* key, char* value);
-char *read_file(const char *filename);
-extern cJSON* entry_json;
-}
-
 class CellularManagerTestFixture : public ::testing::Test {
   protected:
         SMPThreadMock mockedSMPThread;
