@@ -31,8 +31,8 @@ RdkCellularManager_gtest_bin_CPPFLAGS = -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/glib-2.0 \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)/usr/include/glib-2.0 \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(libdir)/glib-2.0/include \
-                                        -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/libqmi-glib \
                                         -I/usr/include/libqmi-glib \
+                                        -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/libqmi-glib \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/dbus-1.0 \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(libdir)/dbus-1.0/include \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/libsafec \
