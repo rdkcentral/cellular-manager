@@ -211,6 +211,15 @@ int ANSC_EXPORT_API CellularMgr_DMLInit
     pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_AccessPoint_Validate",  Cellular_AccessPoint_Validate);
     pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_AccessPoint_Commit",  Cellular_AccessPoint_Commit);
     pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_AccessPoint_Rollback",  Cellular_AccessPoint_Rollback);
+
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_GetEntryCount",  Cellular_Interface_CellInfo_GetEntryCount);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_GetEntry",  Cellular_Interface_CellInfo_GetEntry);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_IsUpdated",  Cellular_Interface_CellInfo_IsUpdated);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_Synchronize",  Cellular_Interface_CellInfo_Synchronize);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_GetParamUlongValue",  Cellular_Interface_CellInfo_GetParamUlongValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_GetParamStringValue",  Cellular_Interface_CellInfo_GetParamStringValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_GetParamIntValue",  Cellular_Interface_CellInfo_GetParamIntValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "Cellular_Interface_CellInfo_GetParamBoolValue",  Cellular_Interface_CellInfo_GetParamBoolValue);
 #endif
     g_pDslhDmlAgent                 = pPlugInfo->hDmlAgent;
     pGetParamValueByPathNameProc = (COSAGetParamValueByPathNameProc)pPlugInfo->AcquireFunction("COSAGetParamValueByPathName");

@@ -349,6 +349,26 @@ typedef  struct
 
 } CellularNetworkScanResultInfoStruct;
 
+typedef struct
+{
+    unsigned int                            MCC;
+    unsigned int                            MNC;
+    unsigned int                            TAC;
+    unsigned int                            globalCellId;
+    char                                    RAT[BUFLEN_128];
+    int                                     RSSI;
+    int                                     RSRP;
+    int                                     RSRQ;
+    unsigned int                            TA;
+    unsigned int                            physicalCellId;
+    unsigned int                            RFCN;
+    unsigned int                            sectorId;
+    bool                                    isServing;
+    char                                    GPS[BUFLEN_128];
+    char                                    scanType[BUFLEN_128];
+    char                                    operatorName[BUFLEN_32];
+} CellularCellInfo;
+
 /* Cellular Device Status Events and Callbacks */
 
 /** Cellular Device Detection Status */

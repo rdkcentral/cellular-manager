@@ -5003,6 +5003,443 @@ Cellular_AccessPoint_Rollback
     return ANSC_STATUS_SUCCESS;
 }
 
+/***********************************************************************
+
+ APIs for Object:
+
+    Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.
+
+    *  Cellular_Interface_CellInfo_IsUpdated
+    *  Cellular_Interface_CellInfo_Synchronize
+    *  Cellular_Interface_CellInfo_GetEntryCount
+    *  Cellular_Interface_CellInfo_GetEntry
+    *  Cellular_Interface_CellInfo_GetParamUlongValue
+    *  Cellular_Interface_CellInfo_GetParamStringValue
+    *  Cellular_Interface_CellInfo_GetParamIntValue
+    *  Cellular_Interface_CellInfo_GetParamBoolValue
+
+***********************************************************************/
+/**********************************************************************
+
+    caller:     owner of this object
+
+    prototype:
+
+        BOOL
+        Cellular_Interface_CellInfo_IsUpdated
+            (
+                ANSC_HANDLE                 hInsContext
+            );
+
+    description:
+
+        This function is checking whether the table is updated or not.
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+    return:     TRUE or FALSE.
+
+**********************************************************************/
+BOOL
+Cellular_Interface_CellInfo_IsUpdated
+    (
+        ANSC_HANDLE                 hInsContext
+    )
+{
+    return TRUE;
+}
+
+/**********************************************************************
+
+    caller:     owner of this object
+
+    prototype:
+
+        ULONG
+        Cellular_Interface_CellInfo_Synchronize
+            (
+                ANSC_HANDLE                 hInsContext
+            );
+
+    description:
+
+        This function is called to synchronize the table.
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+    return:     The status of the operation.
+
+**********************************************************************/
+ULONG
+Cellular_Interface_CellInfo_Synchronize
+    (
+        ANSC_HANDLE                 hInsContext
+    )
+{   
+    PCELLULAR_INTERFACE_INFO                   pstInterfaceInfo = (PCELLULAR_INTERFACE_INFO)hInsContext;
+    int i;
+
+    //Get available intra, inter frequency cell information
+    CELL_LOCATION_SUBINFO loc = CellularMgr_GetCellLocationSubsciptionStatus( );
+    CellularMgr_GetCellInformation(&pstInterfaceInfo->pstCellInfo, &pstInterfaceInfo->ulCellInfoNoOfEntries, loc);
+
+    return ANSC_STATUS_SUCCESS;
+}
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        ULONG
+        Cellular_Interface_CellInfo_GetEntryCount
+            (
+                ANSC_HANDLE                 hInsContext
+            );
+
+    description:
+
+        This function is called to retrieve the count of the table.
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+    return:     The count of the table
+
+**********************************************************************/
+ULONG
+Cellular_Interface_CellInfo_GetEntryCount
+    (
+        ANSC_HANDLE                 hInsContext
+    )
+{   
+    PCELLULAR_INTERFACE_INFO    pstInterfaceInfo = (PCELLULAR_INTERFACE_INFO)hInsContext;
+
+    return pstInterfaceInfo->ulCellInfoNoOfEntries;
+}
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        ANSC_HANDLE
+        Cellular_Interface_CellInfo_GetEntry
+            (
+                ANSC_HANDLE                 hInsContext,
+                ULONG                       nIndex,
+                ULONG*                      pInsNumber
+            );
+
+    description:
+
+        This function is called to retrieve the entry specified by the index.
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                ULONG                       nIndex,
+                The index of this entry;
+
+                ULONG*                      pInsNumber
+                The output instance number;
+
+    return:     The handle to identify the entry
+
+**********************************************************************/
+ANSC_HANDLE
+Cellular_Interface_CellInfo_GetEntry
+    (
+        ANSC_HANDLE                 hInsContext,
+        ULONG                       nIndex,
+        ULONG*                      pInsNumber
+    )
+{    
+    PCELLULAR_INTERFACE_INFO                   pstInterfaceInfo = (PCELLULAR_INTERFACE_INFO)hInsContext;
+    PCELLULAR_INTERFACE_CELL_INFO              pstCellInfo = &(pstInterfaceInfo->pstCellInfo[nIndex]);
+
+    *pInsNumber = nIndex + 1;
+
+    return (pstCellInfo); /* return the handle */
+}
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        BOOL
+        Cellular_Interface_CellInfo_GetParamStringValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                char*                       pString
+            );
+
+    description:
+
+        This function is called to set string parameter value; 
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                char*                       pString
+                The updated string value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL
+Cellular_Interface_CellInfo_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pString
+    )
+{
+    PCELLULAR_INTERFACE_CELL_INFO   pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)hInsContext;
+
+    /* check the parameter name and return the corresponding value */
+    if( AnscEqualString(ParamName, "RAT", TRUE))   
+    {
+        /* save update to backup */
+        AnscCopyString(pstCellInfo->RAT, pString);
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "GPS", TRUE) )
+    {
+        /* save update to backup */
+        AnscCopyString(pstCellInfo->GPS, pString);
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "ScanType", TRUE) )
+    {
+        /* save update to backup */
+        AnscCopyString(pstCellInfo->ScanType, pString);
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "OperatorName", TRUE) )
+    {
+        /* save update to backup */
+        AnscCopyString(pstCellInfo->OperatorName, pString);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        BOOL
+        Cellular_Interface_CellInfo_GetParamUlongValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                ULONG*                      puLong
+            );
+
+    description:
+
+        This function is called to retrieve ULONG parameter value; 
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                ULONG*                      puLong
+                The buffer of returned ULONG value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL
+Cellular_Interface_CellInfo_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    )
+{    
+    PCELLULAR_INTERFACE_CELL_INFO   pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)hInsContext;
+
+    /* check the parameter name and return the corresponding value */
+    if( AnscEqualString(ParamName, "MCC", TRUE))   
+    {
+        *puLong = pstCellInfo->MCC;    
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "MNC", TRUE))   
+    {
+        *puLong = pstCellInfo->MNC;    
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "TAC", TRUE))   
+    {
+        *puLong = pstCellInfo->TAC;    
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "GlobalCellId", TRUE))   
+    {
+        *puLong = pstCellInfo->GlobalCellId;    
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "TA", TRUE))   
+    {
+        *puLong = pstCellInfo->TA;    
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "PhysicalCellId", TRUE))   
+    {
+        *puLong = pstCellInfo->PhysicalCellId;    
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "RFCN", TRUE))   
+    {
+        *puLong = pstCellInfo->RFCN;    
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "SectorId", TRUE))   
+    {
+        *puLong = pstCellInfo->SectorId;    
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**********************************************************************
+
+    caller:     owner of this object
+
+    prototype:
+
+        BOOL
+        Cellular_Interface_CellInfo_GetParamIntValue
+            (   
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                int*                        pInt
+            );
+
+    description:
+
+        This function is called to retrieve integer parameter value;
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                int*                        pInt
+                The buffer of returned integer value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+
+BOOL
+Cellular_Interface_CellInfo_GetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int*                        pInt
+    )
+{
+    PCELLULAR_INTERFACE_CELL_INFO   pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)hInsContext;
+
+    /* check the parameter name and return the corresponding value */
+    if( AnscEqualString(ParamName, "RSSI", TRUE))
+    {
+        *pInt = pstCellInfo->RSSI;
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "RSRP", TRUE))
+    {
+        *pInt = pstCellInfo->RSRP;
+        return TRUE;
+    }
+
+    if( AnscEqualString(ParamName, "RSRQ", TRUE))
+    {
+        *pInt = pstCellInfo->RSRQ;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**********************************************************************
+    caller:     owner of this object
+
+    prototype:
+        BOOL
+        Cellular_Interface_CellInfo_GetParamBoolValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                BOOL*                       pBool
+            );
+
+    description:
+        This function is called to retrieve Boolean parameter value;
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                BOOL*                       pBool
+                The buffer of returned boolean value;
+
+    return:     TRUE if succeeded.
+**********************************************************************/
+BOOL
+Cellular_Interface_CellInfo_GetParamBoolValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        BOOL*                       pBool
+    )
+{
+    PCELLULAR_INTERFACE_CELL_INFO  pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)hInsContext;
+
+    /* check the parameter name and return the corresponding value */
+    if( AnscEqualString(ParamName, "IsServing", TRUE) )
+    {
+        *pBool = pstCellInfo->IsServing;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 #ifdef RDK_SPEEDTEST_LTE
 /***********************************************************************
 

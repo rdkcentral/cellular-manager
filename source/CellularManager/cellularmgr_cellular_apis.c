@@ -69,6 +69,7 @@
     #define STATIC
     extern FILE* fopen_mock(const char* filename, const char* mode);
     #define fopen                     fopen_mock    // Mock fopen for testing
+
 #endif
 
 #if RBUS_BUILD_FLAG_ENABLE
@@ -507,7 +508,7 @@ ANSC_STATUS DmlCellularInitialize ( ANSC_HANDLE  hDml )
         pstInterfaceInfo->X_RDK_RegisteredService = REGISTERED_SERVICE_NONE; 
         pstInterfaceInfo->stPlmnAccessInfo.RoamingStatus  = ROAMING_STATUS_HOME;
         pstInterfaceInfo->stPlmnAccessInfo.pstAvailableNetworks = NULL;
-        /* Creating Dummy UICC Entry for more info refer AccessPoint Entry count comment */
+        /* Creating Dummy entry for more info refer AccessPoint Entry count comment */
 #if RBUS_BUILD_FLAG_ENABLE
         pstInterfaceInfo->stPlmnAccessInfo.ulAvailableNetworkNoOfEntries  = 1;
 #else
@@ -536,7 +537,17 @@ ANSC_STATUS DmlCellularInitialize ( ANSC_HANDLE  hDml )
         }
 
         memset(pstInterfaceInfo->pstContextProfileInfo, 0, sizeof(CELLULAR_INTERFACE_CONTEXTPROFILE_INFO));
+
+        /* Creating Dummy entry for more info refer AccessPoint Entry count comment */
+        // default cell info for serving cell
+#if RBUS_BUILD_FLAG_ENABLE        
+        pstInterfaceInfo->ulCellInfoNoOfEntries = 1;
+#else
+        pstInterfaceInfo->ulCellInfoNoOfEntries = 0;
+#endif
+        pstInterfaceInfo->pstCellInfo = NULL;
     }
+
     /*
      * Initialize EUICC slot DML and needs to be build once Modem opened
     */
@@ -969,6 +980,7 @@ int CellularMgr_AccessPointModifyProfile( PCELLULAR_INTERFACE_ACCESSPOINT_INFO p
 
 CELLULAR_RADIO_SIGNAL_SUBINFO CellularMgr_GetRadioSignalSubsciptionStatus( void )
 {
+#if RBUS_BUILD_FLAG_ENABLE
     if( ( gRBUSSubListSt.stRadioSignal.RSSISubFlag ) ||
         ( gRBUSSubListSt.stRadioSignal.SNRSubFlag ) ||
         ( gRBUSSubListSt.stRadioSignal.RSRPSubFlag ) || 
@@ -982,6 +994,9 @@ CELLULAR_RADIO_SIGNAL_SUBINFO CellularMgr_GetRadioSignalSubsciptionStatus( void 
     {
         return SIGNAL_NO_SUB_HAL_VALUE;
     }
+#else
+    return SIGNAL_NO_SUB_HAL_VALUE;
+#endif
 }
 
 int CellularMgr_GetRadioEnvConditions( CELLULAR_INTERFACE_SERVING_INFO *pstServingInfo, CELLULAR_RADIO_SIGNAL_SUBINFO signal )
@@ -1078,9 +1093,11 @@ int CellularMgr_GetRadioEnvConditions( CELLULAR_INTERFACE_SERVING_INFO *pstServi
 
 CELL_LOCATION_SUBINFO CellularMgr_GetCellLocationSubsciptionStatus( void )
 {
+#if RBUS_BUILD_FLAG_ENABLE
     if( ( gRBUSSubListSt.stCellLocation.GlobalCellIdSubFlag ) ||
         ( gRBUSSubListSt.stCellLocation.ServingCellIdSubFlag ) ||
-        ( gRBUSSubListSt.stCellLocation.BandInfoSubFlag ) )
+        ( gRBUSSubListSt.stCellLocation.BandInfoSubFlag ) ||
+        ( gRBUSSubListSt.stCellLocation.CellInfoSubFlag ) )
     {
         return LOC_SUB_CACHE_VALUE;
     }
@@ -1088,6 +1105,9 @@ CELL_LOCATION_SUBINFO CellularMgr_GetCellLocationSubsciptionStatus( void )
     {
         return LOC_NO_SUB_HAL_VALUE;
     }
+#else
+    return LOC_NO_SUB_HAL_VALUE;
+#endif
 }
 
 int CellularMgr_CellLocationInfo( CELLULAR_INTERFACE_INFO  *pstInterfaceInfo, CELL_LOCATION_SUBINFO loc )
@@ -1729,8 +1749,10 @@ void CellularMgr_NetworkPacketStatisticsInit(void)
 {
     char buff[32] = {0};
 
+#if RBUS_BUILD_FLAG_ENABLE
     rbus_get_int32(RBUS_DEVICE_MODE, &g_device_mode);
     CcspTraceInfo(("%s: %d\n",RBUS_DEVICE_MODE, g_device_mode));
+#endif
 
     /* Check if the marker file exists to determine if this is the first run after boot */
     if (access("/tmp/CellularMgr_first_time_run_after_boot", F_OK) == 0)
@@ -1802,4 +1824,82 @@ int CellularMgr_NetworkPacketStatisticsUpdate(PCELLULAR_INTERFACE_STATS_INFO pst
                        g_extender_stats.GFOUserBytesReceived , g_extender_stats.TotalUserBytesReceived));
     }
     return ret;
+}
+
+int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo, unsigned int *puiTotalCount, CELL_LOCATION_SUBINFO loc )
+{
+    STATIC CellularCellInfo cell_info[CELLULAR_INTRA_INTER_FREQ_MAX_CNT]; //TODO: This can be made dynamic, but where to free?
+    STATIC unsigned int total_cell_count = 0;
+    int retVal = RETURN_OK;
+
+    if( NULL != *ppstCellInfo )
+    {
+        free( *ppstCellInfo );
+        *ppstCellInfo = NULL;
+    }
+ 
+    *puiTotalCount = 0;
+
+    // fetch data from HAL if cached flag is false
+    if ( loc != LOC_SUB_CACHE_VALUE ) {
+        CellularCellInfo prev_cell_info[CELLULAR_INTRA_INTER_FREQ_MAX_CNT];
+        unsigned int prev_total_cell_count = total_cell_count;
+
+        memcpy(prev_cell_info, cell_info, sizeof(CellularCellInfo) * prev_total_cell_count);
+
+        // fetch from hal qmi
+        retVal = cellular_hal_get_cell_info( &cell_info, &total_cell_count );
+
+        // publish values whenever there is a new fetch from hal
+        CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo(&prev_cell_info, prev_total_cell_count, &cell_info, total_cell_count);
+    }
+    
+    if ( total_cell_count > CELLULAR_INTRA_INTER_FREQ_MAX_CNT ) {
+        CcspTraceError(("%s:%d total cell count (%u) greater than existing memory (%u)\n", __FUNCTION__, __LINE__, 
+            total_cell_count, CELLULAR_INTRA_INTER_FREQ_MAX_CNT));
+        //re-assign count to fit mem size
+        total_cell_count = CELLULAR_INTRA_INTER_FREQ_MAX_CNT;
+    }
+
+    if( RETURN_OK == retVal) 
+    {
+        if( 0 < total_cell_count )
+        {
+            PCELLULAR_INTERFACE_CELL_INFO pstTmpCellInfo = NULL;
+            int i = 0;
+
+            pstTmpCellInfo = (PCELLULAR_INTERFACE_CELL_INFO) malloc ( sizeof(CELLULAR_INTERFACE_CELL_INFO) * total_cell_count );
+            if (pstTmpCellInfo == NULL) {
+                CcspTraceError(("%s:%d failed to allocate memory\n", __FUNCTION__, __LINE__));
+                return RETURN_ERROR;
+            }
+
+            memset( pstTmpCellInfo, 0, sizeof(CELLULAR_INTERFACE_CELL_INFO) * total_cell_count );
+
+            for( i = 0; i < total_cell_count; i++ )
+            {
+                pstTmpCellInfo[i].MCC = cell_info[i].MCC;
+                pstTmpCellInfo[i].MNC = cell_info[i].MNC;
+                pstTmpCellInfo[i].TAC = cell_info[i].TAC;
+                pstTmpCellInfo[i].GlobalCellId = cell_info[i].globalCellId;
+                snprintf( pstTmpCellInfo[i].RAT, sizeof(pstTmpCellInfo[i].RAT), "%s", cell_info[i].RAT );
+                pstTmpCellInfo[i].RSSI = cell_info[i].RSSI;
+                pstTmpCellInfo[i].RSRP = cell_info[i].RSRP;
+                pstTmpCellInfo[i].RSRQ = cell_info[i].RSRQ;
+                pstTmpCellInfo[i].TA = cell_info[i].TA;
+                pstTmpCellInfo[i].PhysicalCellId = cell_info[i].physicalCellId;
+                pstTmpCellInfo[i].RFCN = cell_info[i].RFCN;
+                pstTmpCellInfo[i].SectorId = cell_info[i].sectorId;
+                pstTmpCellInfo[i].IsServing = cell_info[i].isServing;
+                snprintf( pstTmpCellInfo[i].GPS, sizeof(pstTmpCellInfo[i].GPS), "%s", cell_info[i].GPS );
+                snprintf( pstTmpCellInfo[i].ScanType, sizeof(pstTmpCellInfo[i].ScanType), "%s", cell_info[i].scanType );
+                snprintf( pstTmpCellInfo[i].OperatorName, sizeof(pstTmpCellInfo[i].OperatorName), "%s", cell_info[i].operatorName );
+            }
+
+            *puiTotalCount = total_cell_count;
+            *ppstCellInfo = pstTmpCellInfo;
+        }
+    }
+
+    return RETURN_OK;
 }

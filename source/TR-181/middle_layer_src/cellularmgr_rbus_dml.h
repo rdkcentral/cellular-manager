@@ -45,6 +45,10 @@
 
 #include <rbus.h>
 
+#ifndef BUFLEN_256
+#define BUFLEN_256          (256)
+#endif
+
 rbusError_t cellularmgr_Init();
 rbusError_t cellularmgr_Unload();
 
