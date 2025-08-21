@@ -891,6 +891,81 @@ Cellular_AccessPoint_Rollback
         ANSC_HANDLE                 hInsContext
     );
 
+/***********************************************************************
+
+ APIs for Object:
+
+    Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.
+
+    *  Cellular_Interface_CellInfo_IsUpdated
+    *  Cellular_Interface_CellInfo_Synchronize
+    *  Cellular_Interface_CellInfo_GetEntryCount
+    *  Cellular_Interface_CellInfo_GetEntry
+    *  Cellular_Interface_CellInfo_GetParamUlongValue
+    *  Cellular_Interface_CellInfo_GetParamStringValue
+    *  Cellular_Interface_CellInfo_GetParamIntValue
+    *  Cellular_Interface_CellInfo_GetParamBoolValue
+
+***********************************************************************/
+
+BOOL
+Cellular_Interface_CellInfo_IsUpdated
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+ULONG
+Cellular_Interface_CellInfo_Synchronize
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+ULONG
+Cellular_Interface_CellInfo_GetEntryCount
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+ANSC_HANDLE
+Cellular_Interface_CellInfo_GetEntry
+    (
+        ANSC_HANDLE                 hInsContext,
+        ULONG                       nIndex,
+        ULONG*                      pInsNumber
+    );
+
+BOOL
+Cellular_Interface_CellInfo_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    );
+
+BOOL
+Cellular_Interface_CellInfo_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pString
+    );
+
+BOOL
+Cellular_Interface_CellInfo_GetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int*                        pInt
+    );
+
+BOOL
+Cellular_Interface_CellInfo_GetParamBoolValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        BOOL*                       pBool
+    );
+
 #ifdef RDK_SPEEDTEST_LTE
 /***********************************************************************
 
