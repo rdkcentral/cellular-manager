@@ -19,11 +19,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install nanomsg dependency
-        run: |
-         apt-get update
-         apt-get install -y libnanomsg-dev libqmi-glib-dev
-
       - name: Run unit tests
         run: sh -c source/test/run_ut.sh
 
