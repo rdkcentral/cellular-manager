@@ -1828,7 +1828,7 @@ int CellularMgr_NetworkPacketStatisticsUpdate(PCELLULAR_INTERFACE_STATS_INFO pst
 
 int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo, unsigned int *puiTotalCount, CELL_LOCATION_SUBINFO loc )
 {
-    STATIC CellularCellInfo cell_info[CELLULAR_INTRA_INTER_FREQ_MAX_CNT]; //TODO: This can be made dynamic, but where to free?
+    STATIC CellularCellInfo cell_info[CELLULAR_INTRA_INTER_FREQ_MAX_CNT]; //This needs to be static for caching
     STATIC unsigned int total_cell_count = 0;
     int retVal = RETURN_OK;
 
@@ -1845,10 +1845,21 @@ int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo,
         CellularCellInfo prev_cell_info[CELLULAR_INTRA_INTER_FREQ_MAX_CNT];
         unsigned int prev_total_cell_count = total_cell_count;
 
+        if (prev_total_cell_count > CELLULAR_INTRA_INTER_FREQ_MAX_CNT) {
+            CcspTraceError(("%s:%d previous total cell count (%u) greater than existing memory (%u)\n", __FUNCTION__, __LINE__, 
+                prev_total_cell_count, CELLULAR_INTRA_INTER_FREQ_MAX_CNT));
+            prev_total_cell_count = CELLULAR_INTRA_INTER_FREQ_MAX_CNT;
+        }
+
+        // copy prev cell info
         memcpy(prev_cell_info, cell_info, sizeof(CellularCellInfo) * prev_total_cell_count);
 
         // fetch from hal qmi
         retVal = cellular_hal_get_cell_info( &cell_info, &total_cell_count );
+        if (retVal != RETURN_OK) {
+            CcspTraceError(("%s:%d failed to get cell info from hal\n", __FUNCTION__, __LINE__));
+            return RETURN_ERROR;
+        }
 
         // publish values whenever there is a new fetch from hal
         CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo(&prev_cell_info, prev_total_cell_count, &cell_info, total_cell_count);

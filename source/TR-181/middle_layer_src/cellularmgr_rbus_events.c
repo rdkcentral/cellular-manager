@@ -433,7 +433,7 @@ ANSC_STATUS CellularMgr_Rbus_String_EventPublish_OnValueChange(char *dm_event, v
 /***********************************************************************
   Event subscribe handler API for objects:
  ***********************************************************************/
-rbusError_t CellularMgrDmlPublishEventHandler(rbusHandle_t handle, rbusEventSubAction_t action, const char* eventName, rbusFilter_t filter, int32_t interval, bool* autoPublish)
+rbusError_t CellularMgrDmlSubscribeEventHandler(rbusHandle_t handle, rbusEventSubAction_t action, const char* eventName, rbusFilter_t filter, int32_t interval, bool* autoPublish)
 {
     if(eventName == NULL)
     {
