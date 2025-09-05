@@ -1398,9 +1398,10 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
                         &g_array_index(pIntraFreqCells, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement, i);
             
             pCellInfo[localCellCnt].physical_cell_id = pCell->physical_cell_id;
-            pCellInfo[localCellCnt].rsrq = pCell->rsrq;
-            pCellInfo[localCellCnt].rsrp = pCell->rsrp;
-            pCellInfo[localCellCnt].rssi = pCell->rssi;
+	    // round-off similar to how qmcli handles 
+            pCellInfo[localCellCnt].rsrq = pCell->rsrq * 0.1;
+            pCellInfo[localCellCnt].rsrp = pCell->rsrp * 0.1;
+            pCellInfo[localCellCnt].rssi = pCell->rssi * 0.1;
             pCellInfo[localCellCnt].rfcn = nasCtx->rfcn;
             localCellCnt++;
             
@@ -1421,9 +1422,10 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
                         &g_array_index(pFreqInfo->cell, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement, k);
 
                     pCellInfo[localCellCnt].physical_cell_id = pCell->physical_cell_id;
-                    pCellInfo[localCellCnt].rsrq = pCell->rsrq;
-                    pCellInfo[localCellCnt].rsrp = pCell->rsrp;
-                    pCellInfo[localCellCnt].rssi = pCell->rssi;
+	            // round-off similar to how qmcli handles 
+                    pCellInfo[localCellCnt].rsrq = pCell->rsrq * 0.1;
+                    pCellInfo[localCellCnt].rsrp = pCell->rsrp * 0.1;
+                    pCellInfo[localCellCnt].rssi = pCell->rssi * 0.1;
                     pCellInfo[localCellCnt].rfcn = pFreqInfo->eutra_absolute_rf_channel_number;
                     localCellCnt++;
 
