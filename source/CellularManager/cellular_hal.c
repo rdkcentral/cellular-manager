@@ -577,3 +577,13 @@ int cellular_hal_modem_reset( void )
 
     return RETURN_OK;
 }
+
+int cellular_hal_get_cell_info(CellularCellInfo *cell_info, unsigned int *total_cell_count) 
+{
+#ifdef QMI_SUPPORT
+    // Get intra, inter frequency cell information
+    return cellular_hal_qmi_get_cell_information(cell_info, total_cell_count);
+#else
+    return RETURN_OK;
+#endif
+}

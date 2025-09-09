@@ -70,6 +70,7 @@ extern extender_stats_t g_extender_stats;
 #define CELLULARMGR_ACCESSPOINT_TABLE            "Device.Cellular.AccessPoint."
 #define CELLULARMGR_UICC_TABLE                   "Device.Cellular.X_RDK_Uicc."
 #define PLMNACCESS_AVAILABLENETWORK_TABLE        "Device.Cellular.Interface.%d.X_RDK_PlmnAccess.AvailableNetworks."
+#define CELLULRMGR_INFACE_CELLINFO_TABLE         "Device.Cellular.Interface.%d.X_RDK_CellInfo."
 
 rbusError_t registerGeneratedDataElements(rbusHandle_t handle);
 
@@ -170,6 +171,16 @@ rbusError_t cellularmgr_Init()
                 }
             }
         }
+
+        snprintf(paramName, sizeof(paramName), CELLULRMGR_INFACE_CELLINFO_TABLE, (i + 1));
+
+        for(int n = 0; n < pstInterfaceInfo->ulCellInfoNoOfEntries; n++)
+        {
+            if (Sample_RegisterRow(paramName, (n+1), NULL, NULL) != RBUS_ERROR_SUCCESS)
+            {
+                CcspTraceError(("%s-%d: Failed to Add CellInfo Inst(%d) Table(%s) \n", __FUNCTION__, __LINE__, (n+1), paramName));
+            }
+        }
     }
 
     for(int k = 0; k < pstDmlCellular->ulAccessPointNoOfEntries; k++)
@@ -244,6 +255,16 @@ rbusError_t cellularmgr_Unload()
                 {
                     CcspTraceError(("%s-%d : Failed to Del AvailableNetworks Inst(%d) Table(%s) \n", __FUNCTION__, __LINE__, (m+1), paramName));
                 }
+            }
+        }
+
+        snprintf(paramName, sizeof(paramName), CELLULRMGR_INFACE_CELLINFO_TABLE, (i + 1));
+
+        for(int n = 0; n < pstInterfaceInfo->ulCellInfoNoOfEntries; n++)
+        {
+            if (Sample_UnregisterRow(paramName, (n+1)) != RBUS_ERROR_SUCCESS)
+            {
+                CcspTraceError(("%s-%d : Failed to Del CellInfo Inst(%d) Table(%s) \n", __FUNCTION__, __LINE__, (n+1), paramName));
             }
         }
 
@@ -3281,6 +3302,341 @@ rbusError_t Cellular_AccessPoint_SetParamStringValue_rbus(rbusHandle_t handle, r
     return RBUS_ERROR_SUCCESS;
 }
 
+// Cellular Interface intra and inter frequency cell information data models
+
+bool Cellular_Interface_CellInfo_IsUpdated_rbus(void* ctx)
+{
+    PCELLULARMGR_CELLULAR_DATA  pMyObject           = (PCELLULARMGR_CELLULAR_DATA) g_pBEManager->hCellular;
+    PCELLULAR_DML_INFO          pstDmlCellular      = NULL;
+    PCELLULAR_INTERFACE_INFO    pstInterfaceInfo    = NULL;
+    INT index = 0;
+
+    if (pMyObject == NULL) {
+        CcspTraceError(("%s-%d: invalid cellularmgr object\n", __FUNCTION__, __LINE__));
+        return false;
+    }
+
+    pstDmlCellular = (PCELLULAR_DML_INFO) pMyObject->pstDmlCellular;
+    if (pstDmlCellular == NULL)
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr dml\n", __FUNCTION__, __LINE__));
+        return false;
+    }
+
+    sscanf(((HandlerContext *)ctx)->fullName, "Device.Cellular.Interface.%d.X_RDK_CellInfo.", &index);
+    if ((pstDmlCellular->ulInterfaceNoEntries > 0) && index)
+    {
+        pstInterfaceInfo = &(pstDmlCellular->pstInterfaceInfo[index-1]);
+    }
+
+    if (pstInterfaceInfo == NULL)
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr interface: Inst (%d)\n", __FUNCTION__, __LINE__, index));
+        return false;
+    }
+
+    if ( ( AnscGetTickInSeconds() - pstInterfaceInfo->ulCellInfoListLastUpdatedTime ) < CELLULAR_INTERFACE_CELLINFO_LIST_REFRESH_THRESHOLD )
+    {
+        return false;
+    }
+    else
+    {
+        pstInterfaceInfo->ulCellInfoListLastUpdatedTime = AnscGetTickInSeconds();
+        CcspTraceError(("%s-%d: updated\n",__FUNCTION__, __LINE__));
+	    return true;
+    }
+    
+    return true;
+}
+
+rbusError_t Cellular_Interface_CellInfo_Synchronize_rbus(void* ctx)
+{
+    PCELLULARMGR_CELLULAR_DATA  pMyObject           = (PCELLULARMGR_CELLULAR_DATA) g_pBEManager->hCellular;
+    PCELLULAR_DML_INFO          pstDmlCellular      = NULL;
+    PCELLULAR_INTERFACE_INFO    pstInterfaceInfo    = NULL;
+    INT index = 0;
+
+    if (pMyObject == NULL) {
+        CcspTraceError(("%s-%d: invalid cellularmgr object\n", __FUNCTION__, __LINE__));
+        return false;
+    }
+
+    pstDmlCellular = (PCELLULAR_DML_INFO) pMyObject->pstDmlCellular;
+    if (pstDmlCellular == NULL)
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr dml\n", __FUNCTION__, __LINE__));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+
+    sscanf(((HandlerContext *)ctx)->fullName, "Device.Cellular.Interface.%d.X_RDK_CellInfo.", &index);
+    if ((pstDmlCellular->ulInterfaceNoEntries > 0) && index)
+    {
+        pstInterfaceInfo = &(pstDmlCellular->pstInterfaceInfo[index-1]);
+    }
+
+    if (pstInterfaceInfo == NULL)
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr interface: Inst (%d)\n", __FUNCTION__, __LINE__, index));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+
+    char param_name[BUFLEN_256] = {0};
+    sprintf(param_name, CELLULRMGR_INFACE_CELLINFO_TABLE, index);
+    ULONG ulPrevNoOfEntries = pstInterfaceInfo->ulCellInfoNoOfEntries;
+
+    //Get available intra, inter frequency cell information
+    CELL_LOCATION_SUBINFO loc = CellularMgr_GetCellLocationSubsciptionStatus( );
+    CellularMgr_GetCellInformation(&pstInterfaceInfo->pstCellInfo, &pstInterfaceInfo->ulCellInfoNoOfEntries, loc);
+
+    /**
+     *  RBUS Limitation Hack:
+     *  We need to unregister all rows except default 1st row and set context
+     * */
+    if( ulPrevNoOfEntries > 0 )
+    {
+        for( int i = 1; i < ulPrevNoOfEntries; i++ )
+        {
+            if (Sample_UnregisterRow(param_name, (i+1)) == RBUS_ERROR_SUCCESS)
+            {
+                CcspTraceInfo(("%s: unregistered CellInfo table:Inst(%s%d) \n", __FUNCTION__, param_name, (i+1)));
+            }
+        }
+    }
+
+    if ( (pstInterfaceInfo->ulCellInfoNoOfEntries > 0) &&
+         (pstInterfaceInfo->pstCellInfo != NULL) )
+    {
+        for( int j = 0; j < pstInterfaceInfo->ulCellInfoNoOfEntries; j++ )
+        {
+            PCELLULAR_INTERFACE_CELL_INFO  *pstCellInfo = &(pstInterfaceInfo->pstCellInfo[j]);
+            if ( Sample_RegisterRow(param_name, (j+1), NULL, pstCellInfo) == RBUS_ERROR_SUCCESS )
+            {
+                CcspTraceInfo(("%s-%d: add CellInfo tableName(%s), Inst(%d) \n", __FUNCTION__, __LINE__, param_name, (j+1)));
+            } else {
+                SetRowContext(param_name, (j+1), NULL, pstCellInfo);
+                CcspTraceInfo(("%s-%d: set row context for tableName(%s), Inst(%d) \n",__FUNCTION__, __LINE__, param_name, (j+1)));
+            }
+        }
+    }
+    else if( pstInterfaceInfo->ulCellInfoNoOfEntries == 0 ) // RBUS Limitation: Fix
+    {
+        SetRowContext(param_name, 1, NULL, NULL);
+        pstInterfaceInfo->ulCellInfoNoOfEntries = 1;
+        CcspTraceInfo(("%s-%d: set row context for tableName(%s), Inst(%d) \n",__FUNCTION__, __LINE__, param_name, 1));
+    }
+
+    return RBUS_ERROR_SUCCESS;
+}
+
+int do_Cellular_Interface_CellInfo_IsUpdated_Cellular_Interface_CellInfo_Synchronize(HandlerContext context)
+{ 
+    if( Cellular_Interface_CellInfo_IsUpdated_rbus(&context) )
+    {
+        return Cellular_Interface_CellInfo_Synchronize_rbus(&context);
+    }
+        
+    return 0;
+}
+
+static rbusError_t Cellular_Interface_CellInfo_GetEntryCount_rbus(rbusHandle_t handle, rbusProperty_t property, rbusGetHandlerOptions_t* opts)
+{
+    HandlerContext context = GetPropertyContext(property);
+    rbusError_t ret;
+
+    if( ( ret = do_Cellular_Interface_CellInfo_IsUpdated_Cellular_Interface_CellInfo_Synchronize(context) ) != RBUS_ERROR_SUCCESS ) {
+        CcspTraceError(("%s-%d: cellinfo synchronize failed\n", __FUNCTION__, __LINE__));
+        return ret;
+    }
+
+    context = GetPropertyContext(property);
+    PCELLULAR_INTERFACE_INFO    pstInterfaceInfo = (PCELLULAR_INTERFACE_INFO)context.userData;
+
+    if ( pstInterfaceInfo == NULL )
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr interface instance\n", __FUNCTION__, __LINE__));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+
+    if( strncmp(context.name, "X_RDK_CellInfoNumberOfEntries", strlen("X_RDK_CellInfoNumberOfEntries")) == 0 )
+    {
+        rbusProperty_SetUInt64(property, pstInterfaceInfo->ulCellInfoNoOfEntries);
+    }
+    else
+    {
+        return RBUS_ERROR_INVALID_INPUT;
+    }
+
+    return RBUS_ERROR_SUCCESS;
+}
+
+static rbusError_t Cellular_Interface_CellInfo_GetParamUlongValue_rbus(rbusHandle_t handle, rbusProperty_t property, rbusGetHandlerOptions_t* opts)
+{
+    HandlerContext context = GetPropertyContext(property);
+    rbusError_t ret;
+
+    if( ( ret = do_Cellular_Interface_CellInfo_IsUpdated_Cellular_Interface_CellInfo_Synchronize(context) ) != RBUS_ERROR_SUCCESS ) {
+        CcspTraceError(("%s-%d: cellinfo synchronize failed\n", __FUNCTION__, __LINE__));
+        return ret;
+    }
+
+    context = GetPropertyContext(property);
+    PCELLULAR_INTERFACE_CELL_INFO   pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)context.userData;
+    if ( pstCellInfo == NULL )
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr cell info instance\n", __FUNCTION__, __LINE__));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+
+    if(strncmp(context.name, "MCC", strlen("MCC")) == 0)
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->MCC);
+    }
+    else if( strncmp(context.name, "MNC", strlen("MNC")) == 0 )
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->MNC);
+    }
+    else if( strncmp(context.name, "TAC", strlen("TAC")) == 0 )
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->TAC);
+    }
+    else if( strncmp(context.name, "GlobalCellId", strlen("GlobalCellId")) == 0 )
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->GlobalCellId);
+    }
+    else if( strncmp(context.name, "TA", strlen("TA")) == 0 )
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->TA);
+    }
+    else if( strncmp(context.name, "PhysicalCellId", strlen("PhysicalCellId")) == 0 )
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->PhysicalCellId);
+    }
+    else if( strncmp(context.name, "RFCN", strlen("RFCN")) == 0 )
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->RFCN);
+    }
+    else if( strncmp(context.name, "SectorId", strlen("SectorId")) == 0 )
+    {
+        rbusProperty_SetUInt32(property, pstCellInfo->SectorId);
+    }
+    else
+    {
+        return RBUS_ERROR_INVALID_INPUT;
+    }
+
+    return RBUS_ERROR_SUCCESS;
+}
+
+static rbusError_t Cellular_Interface_CellInfo_GetParamStringValue_rbus(rbusHandle_t handle, rbusProperty_t property, rbusGetHandlerOptions_t* opts)
+{
+    HandlerContext context = GetPropertyContext(property);
+    rbusError_t ret;
+
+    if( ( ret = do_Cellular_Interface_CellInfo_IsUpdated_Cellular_Interface_CellInfo_Synchronize(context) ) != RBUS_ERROR_SUCCESS ) {
+        CcspTraceError(("%s-%d: cellinfo synchronize failed\n", __FUNCTION__, __LINE__));
+        return ret;
+    }
+
+    context = GetPropertyContext(property);
+    PCELLULAR_INTERFACE_CELL_INFO   pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)context.userData;
+    if( pstCellInfo == NULL )
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr cell info instance\n", __FUNCTION__, __LINE__));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+
+    if( strncmp(context.name, "RAT", strlen("RAT")) == 0 )
+    {
+        rbusProperty_SetString(property, pstCellInfo->RAT);
+    }
+    else if( strncmp(context.name, "GPS", strlen("GPS")) == 0 )
+    {
+        rbusProperty_SetString(property, pstCellInfo->GPS);
+    }
+    else if( strncmp(context.name, "ScanType", strlen("ScanType")) == 0 )
+    {
+        rbusProperty_SetString(property, pstCellInfo->ScanType);
+    }
+    else if( strncmp(context.name, "OperatorName", strlen("OperatorName")) == 0 )
+    {
+        rbusProperty_SetString(property, pstCellInfo->OperatorName);
+    }
+    else
+    {
+        return RBUS_ERROR_INVALID_INPUT;
+    }
+
+    return RBUS_ERROR_SUCCESS;
+}
+
+static rbusError_t Cellular_Interface_CellInfo_GetParamIntValue_rbus(rbusHandle_t handle, rbusProperty_t property, rbusGetHandlerOptions_t* opts)
+{
+    HandlerContext context = GetPropertyContext(property);
+    rbusError_t ret;
+
+    if( ( ret = do_Cellular_Interface_CellInfo_IsUpdated_Cellular_Interface_CellInfo_Synchronize(context) ) != RBUS_ERROR_SUCCESS ) {
+        CcspTraceError(("%s-%d: cellinfo synchronize failed\n", __FUNCTION__, __LINE__));
+        return ret;
+    }
+
+    context = GetPropertyContext(property);
+    PCELLULAR_INTERFACE_CELL_INFO   pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)context.userData;
+    if( pstCellInfo == NULL )
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr cell info instance\n", __FUNCTION__, __LINE__));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+
+    if( strncmp(context.name, "RSSI", strlen("RSSI")) == 0 )
+    {
+        rbusProperty_SetInt32(property, pstCellInfo->RSSI);
+    }
+    else if( strncmp(context.name, "RSRP", strlen("RSRP")) == 0 )
+    {
+        rbusProperty_SetInt32(property, pstCellInfo->RSRP);
+    }
+    else if( strncmp(context.name, "RSRQ", strlen("RSRQ")) == 0 )
+    {
+        rbusProperty_SetInt32(property, pstCellInfo->RSRQ);
+    }
+    else
+    {
+        return RBUS_ERROR_INVALID_INPUT;
+    }
+
+    return RBUS_ERROR_SUCCESS;
+}
+
+static rbusError_t Cellular_Interface_CellInfo_GetParamBoolValue_rbus(rbusHandle_t handle, rbusProperty_t property, rbusGetHandlerOptions_t* opts)
+{
+    HandlerContext context = GetPropertyContext(property);
+    rbusError_t ret;
+
+    if( ( ret = do_Cellular_Interface_CellInfo_IsUpdated_Cellular_Interface_CellInfo_Synchronize(context) ) != RBUS_ERROR_SUCCESS ) {
+        CcspTraceError(("%s-%d: cellinfo synchronize failed\n", __FUNCTION__, __LINE__));
+        return ret;
+    }
+
+    context = GetPropertyContext(property);
+    PCELLULAR_INTERFACE_CELL_INFO   pstCellInfo = (PCELLULAR_INTERFACE_CELL_INFO)context.userData;
+    if( pstCellInfo == NULL )
+    {
+        CcspTraceError(("%s-%d: invalid cellularmgr cell info instance\n", __FUNCTION__, __LINE__));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+
+    if( strncmp(context.name, "IsServing", strlen("IsServing")) == 0 )
+    {
+        rbusProperty_SetBoolean(property, pstCellInfo->IsServing);
+    }
+    else
+    {
+        return RBUS_ERROR_INVALID_INPUT;
+    }
+
+    return RBUS_ERROR_SUCCESS;
+}
+
 #ifdef RDK_SPEEDTEST_LTE
 static rbusError_t SpeedTest_GetParamBoolValue_rbus(rbusHandle_t handle, rbusProperty_t property, rbusGetHandlerOptions_t* opts)
 {
@@ -3345,8 +3701,8 @@ rbusError_t registerGeneratedDataElements(rbusHandle_t handle)
 {
     rbusError_t rc;
     static rbusDataElement_t dataElements[] = {
-        {"Device.Cellular.X_RDK_Enable", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamBoolValue_rbus, Cellular_SetParamBoolValue_rbus, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.X_RDK_Status", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
+        {"Device.Cellular.X_RDK_Enable", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamBoolValue_rbus, Cellular_SetParamBoolValue_rbus, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.X_RDK_Status", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
         {"Device.Cellular.X_RDK_Model", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.X_RDK_HardwareRevision", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.X_RDK_Vendor", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
@@ -3357,7 +3713,7 @@ rbusError_t registerGeneratedDataElements(rbusHandle_t handle)
         {"Device.Cellular.CellularConfig", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_GetParamStringValue_rbus, Cellular_SetParamStringValue_rbus, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.X_RDK_DeviceManagement.Imei", RBUS_ELEMENT_TYPE_PROPERTY, {DeviceManagement_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.X_RDK_DeviceManagement.FactoryReset", RBUS_ELEMENT_TYPE_PROPERTY, {DeviceManagement_GetParamBoolValue_rbus, DeviceManagement_SetParamBoolValue_rbus, NULL, NULL, NULL, NULL}},
-	{"Device.Cellular.X_RDK_DeviceManagement.RebootDevice", RBUS_ELEMENT_TYPE_PROPERTY, {DeviceManagement_GetParamBoolValue_rbus, DeviceManagement_SetParamBoolValue_rbus, NULL, NULL, NULL, NULL}},
+        {"Device.Cellular.X_RDK_DeviceManagement.RebootDevice", RBUS_ELEMENT_TYPE_PROPERTY, {DeviceManagement_GetParamBoolValue_rbus, DeviceManagement_SetParamBoolValue_rbus, NULL, NULL, NULL, NULL}},
 
         {"Device.Cellular.X_RDK_Firmware.CurrentImageVersion", RBUS_ELEMENT_TYPE_PROPERTY, {Firmware_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.X_RDK_Firmware.FallbackImageVersion", RBUS_ELEMENT_TYPE_PROPERTY, {Firmware_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
@@ -3365,7 +3721,7 @@ rbusError_t registerGeneratedDataElements(rbusHandle_t handle)
         {"Device.Cellular.InterfaceNumberOfEntries", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetEntryCount_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.", RBUS_ELEMENT_TYPE_TABLE, {NULL, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.Enable", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamBoolValue_rbus, Cellular_Interface_SetParamBoolValue_rbus, NULL, NULL, NULL, NULL}}, 
-        {"Device.Cellular.Interface.{i}.Status", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.Status", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
         {"Device.Cellular.Interface.{i}.Alias", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.Name", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.LastChange", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, NULL, NULL}},
@@ -3374,8 +3730,8 @@ rbusError_t registerGeneratedDataElements(rbusHandle_t handle)
         {"Device.Cellular.Interface.{i}.Upstream", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamBoolValue_rbus, Cellular_Interface_SetParamBoolValue_rbus, NULL, NULL, NULL, NULL}},
 #endif
         {"Device.Cellular.Interface.{i}.X_RDK_RegisteredService", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
-	    {"Device.Cellular.Interface.{i}.X_RDK_PhyConnectedStatus", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamBoolValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.X_RDK_LinkAvailableStatus", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamBoolValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_PhyConnectedStatus", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamBoolValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_LinkAvailableStatus", RBUS_ELEMENT_TYPE_EVENT | RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamBoolValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
         {"Device.Cellular.Interface.{i}.RegistrationRetries", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, Cellular_Interface_SetParamUlongValue_rbus, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.MaxRegistrationRetries", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, Cellular_Interface_SetParamUlongValue_rbus, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.RegistrationRetryTimer", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, Cellular_Interface_SetParamUlongValue_rbus, NULL, NULL, NULL, NULL}},
@@ -3388,15 +3744,15 @@ rbusError_t registerGeneratedDataElements(rbusHandle_t handle)
         {"Device.Cellular.Interface.{i}.X_RDK_RFCN", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.X_RDK_PlmnId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.X_RDK_AreaCode", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
-        {"Device.Cellular.Interface.{i}.RSSI", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.X_RDK_SNR", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.RSRP", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.RSRQ", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.X_RDK_GlobalCellId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.X_RDK_ServingCellId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.X_RDK_BandInfo", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.X_RDK_TRX", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
-        {"Device.Cellular.Interface.{i}.X_RDK_RadioEnvConditions", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlPublishEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.RSSI", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_SNR", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.RSRP", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.RSRQ", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_GlobalCellId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_ServingCellId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_BandInfo", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_TRX", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_RadioEnvConditions", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscribeEventHandler, NULL}},
 
         {"Device.Cellular.Interface.{i}.X_RDK_Identification.Imei", RBUS_ELEMENT_TYPE_PROPERTY, {Identification_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.X_RDK_Identification.Iccid", RBUS_ELEMENT_TYPE_PROPERTY, {Identification_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
@@ -3407,7 +3763,7 @@ rbusError_t registerGeneratedDataElements(rbusHandle_t handle)
 
         {"Device.Cellular.Interface.{i}.X_RDK_PlmnAccess.AvailableNetworksNumberOfEntries", RBUS_ELEMENT_TYPE_PROPERTY, {AvailableNetworks_GetEntryCount_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.X_RDK_PlmnAccess.AvailableNetworks.{i}.", RBUS_ELEMENT_TYPE_TABLE, {NULL, NULL, NULL, NULL, NULL, NULL}},
-	{"Device.Cellular.Interface.{i}.X_RDK_PlmnAccess.AvailableNetworks.{i}.Mcc", RBUS_ELEMENT_TYPE_PROPERTY, {AvailableNetworks_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_PlmnAccess.AvailableNetworks.{i}.Mcc", RBUS_ELEMENT_TYPE_PROPERTY, {AvailableNetworks_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.X_RDK_PlmnAccess.AvailableNetworks.{i}.Mnc", RBUS_ELEMENT_TYPE_PROPERTY, {AvailableNetworks_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.X_RDK_PlmnAccess.AvailableNetworks.{i}.Name", RBUS_ELEMENT_TYPE_PROPERTY, {AvailableNetworks_GetParamStringValue_rbus, NULL, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.Interface.{i}.X_RDK_PlmnAccess.AvailableNetworks.{i}.Allowed", RBUS_ELEMENT_TYPE_PROPERTY, {AvailableNetworks_GetParamBoolValue_rbus, NULL, NULL, NULL, NULL, NULL}},
@@ -3498,6 +3854,26 @@ rbusError_t registerGeneratedDataElements(rbusHandle_t handle)
         {"Device.Cellular.AccessPoint.{i}.Password", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_AccessPoint_GetParamStringValue_rbus, Cellular_AccessPoint_SetParamStringValue_rbus, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.AccessPoint.{i}.X_RDK_IpAddressFamily", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_AccessPoint_GetParamStringValue_rbus, Cellular_AccessPoint_SetParamStringValue_rbus, NULL, NULL, NULL, NULL}},
         {"Device.Cellular.AccessPoint.{i}.X_RDK_PdpInterfaceConfig", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_AccessPoint_GetParamStringValue_rbus, Cellular_AccessPoint_SetParamStringValue_rbus, NULL, NULL, NULL, NULL}},
+        
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfoNumberOfEntries", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetEntryCount_rbus, NULL, NULL, NULL, NULL, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.", RBUS_ELEMENT_TYPE_TABLE, {NULL, NULL, NULL, NULL, NULL, NULL}},
+        
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.MCC", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.MNC", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.TAC", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.GlobalCellId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.RAT", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.RSSI", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.RSRP", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.RSRQ", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamIntValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.TA", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.PhysicalCellId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.RFCN", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.SectorId", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamUlongValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.IsServing", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamBoolValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.GPS", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.ScanType", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
+        {"Device.Cellular.Interface.{i}.X_RDK_CellInfo.{i}.OperatorName", RBUS_ELEMENT_TYPE_PROPERTY, {Cellular_Interface_CellInfo_GetParamStringValue_rbus, NULL, NULL, NULL, CellularMgrDmlSubscriptionHandler, NULL}},
 #ifdef RDK_SPEEDTEST_LTE
 	{"Device.Cellular.X_RDK_SpeedTest.Enable", RBUS_ELEMENT_TYPE_PROPERTY, {SpeedTest_GetParamBoolValue_rbus, SpeedTest_SetParamBoolValue_rbus, NULL, NULL, NULL, NULL}}
 #endif /* RDK_SPEEDTEST_LTE */
