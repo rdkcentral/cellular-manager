@@ -20,6 +20,8 @@
 #ifndef _CELLULAR_HAL_QMI_APIS_H_
 #define _CELLULAR_HAL_QMI_APIS_H_
 
+#define  CELLULAR_QMI_INTER_FREQ_MAX_CNT    ( 20 ) 
+
 #include "cellular_hal_utils.h"
 
 /**********************************************************************
@@ -97,4 +99,5 @@ int cellular_hal_qmi_get_supported_radio_technology(char *supported_rat);
 int cellular_hal_qmi_get_preferred_radio_technology( char *preferred_rat);
 int cellular_hal_qmi_set_preferred_radio_technology( char *preferred_rat);
 int cellular_hal_qmi_get_current_radio_technology( char *current_rat);
+int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned int *pTotal_cell_count);
 #endif //_CELLULAR_HAL_QMI_APIS_H_

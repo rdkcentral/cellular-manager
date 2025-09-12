@@ -38,9 +38,10 @@
 */
 
 /* Accesspoint list should be populated for below TTL interval */
-#define CELLULAR_ACCESSPOINT_LIST_REFRESH_THRESHOLD      (120)
-#define CELLULAR_UICCSLOT_LIST_REFRESH_THRESHOLD         (30)
-#define CELLULAR_AVAILABLE_NETWORK_LIST_REFRESH_THRESHOLD (60)
+#define CELLULAR_ACCESSPOINT_LIST_REFRESH_THRESHOLD         (120)
+#define CELLULAR_UICCSLOT_LIST_REFRESH_THRESHOLD            (30)
+#define CELLULAR_AVAILABLE_NETWORK_LIST_REFRESH_THRESHOLD   (60)
+#define CELLULAR_INTERFACE_CELLINFO_LIST_REFRESH_THRESHOLD  (120)
 
 #define CELLULAR_RADIO_ENV_EXCELLENT_THRESHOLD           (-85)
 #define CELLULAR_RADIO_ENV_GOOD_THRESHOLD_HIGH           (-85)
@@ -71,6 +72,8 @@
 #define PARTNERS_DEFAULTS_CELLULARMANAGER_DEFAULT_PROFILE_PASSWORD         "Device.Cellular.AccessPoint.X_RDK_DefaultAPN.1.Password"
 #define PARTNERS_DEFAULTS_CELLULARMANAGER_DEFAULT_PROFILE_IS_NOROAMING     "Device.Cellular.AccessPoint.X_RDK_DefaultAPN.1.IsNoRoaming"
 #define PARTNERS_DEFAULTS_CELLULARMANAGER_DEFAULT_PROFILE_IS_APNDISABLED   "Device.Cellular.AccessPoint.X_RDK_DefaultAPN.1.IsAPNDisabled"
+
+#define  CELLULAR_INTRA_INTER_FREQ_MAX_CNT               (20)
 
 extern char MCCMNC[10];
 
@@ -358,6 +361,28 @@ _CELLULAR_PLMNACCESS_INFO
 }
 CELLULAR_PLMNACCESS_INFO,  *PCELLULAR_PLMNACCESS_INFO;
 
+typedef struct
+_CELLULAR_INTERFACE_CELL_INFO
+{
+   UINT                                MCC;
+   UINT                                MNC;
+   UINT                                TAC;
+   UINT                                GlobalCellId;
+   CHAR                                RAT[128];
+   INT                                 RSSI;
+   INT                                 RSRP;
+   INT                                 RSRQ;
+   UINT                                TA;
+   UINT                                PhysicalCellId;
+   UINT                                RFCN;
+   UINT                                SectorId;
+   BOOLEAN                             IsServing;
+   CHAR                                GPS[128];
+   CHAR                                ScanType[128];
+   CHAR                                OperatorName[128];
+}
+CELLULAR_INTERFACE_CELL_INFO, *PCELLULAR_INTERFACE_CELL_INFO;
+
 typedef  struct
 _CELLULAR_INTERFACE_INFO                                         
 {
@@ -391,6 +416,9 @@ _CELLULAR_INTERFACE_INFO
     UINT                                        Global_cell_id;
     UINT                                        BandInfo;
     UINT                                        Serving_cell_id;
+    ULONG                                       ulCellInfoListLastUpdatedTime;
+    UINT                                        ulCellInfoNoOfEntries;
+    PCELLULAR_INTERFACE_CELL_INFO               pstCellInfo;
 }
 CELLULAR_INTERFACE_INFO,  *PCELLULAR_INTERFACE_INFO;
 
@@ -535,6 +563,8 @@ int rbus_get_int32(char * path, int* value);
 void CellularMgr_NetworkPacketStatisticsInit(void);
 
 int CellularMgr_NetworkPacketStatisticsUpdate(PCELLULAR_INTERFACE_STATS_INFO pstStatsInfo);
+
+int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo, unsigned int *puiTotalCount, CELL_LOCATION_SUBINFO loc );
 
 #ifdef RDK_SPEEDTEST_LTE
 void CellularMgr_EnableSpeedTest( bool bEnable );

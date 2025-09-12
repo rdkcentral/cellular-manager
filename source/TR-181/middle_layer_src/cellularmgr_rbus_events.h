@@ -61,6 +61,22 @@ extern "C" {
 #define CELLULARMGR_INFACE_STATUS                          "Device.Cellular.Interface.%d.Status"
 #define CELLULARMGR_INFACE_PHY_CONNECTION_STATUS           "Device.Cellular.Interface.%d.X_RDK_PhyConnectedStatus"
 #define CELLULARMGR_INFACE_LINK_AVAILABLE_STATUS           "Device.Cellular.Interface.%d.X_RDK_LinkAvailableStatus"
+#define CELLULRMGR_INFACE_CELLINFO_MCC                     "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.MCC"
+#define CELLULRMGR_INFACE_CELLINFO_MNC                     "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.MNC"
+#define CELLULRMGR_INFACE_CELLINFO_TAC                     "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.TAC"
+#define CELLULRMGR_INFACE_CELLINFO_GLOBAL_CELL_ID          "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.GlobalCellId"
+#define CELLULRMGR_INFACE_CELLINFO_RAT                     "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.RAT"
+#define CELLULRMGR_INFACE_CELLINFO_RSSI                    "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.RSSI"
+#define CELLULRMGR_INFACE_CELLINFO_RSRP                    "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.RSRP"
+#define CELLULRMGR_INFACE_CELLINFO_RSRQ                    "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.RSRQ"
+#define CELLULRMGR_INFACE_CELLINFO_TA                      "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.TA"
+#define CELLULRMGR_INFACE_CELLINFO_PHY_CELL_ID             "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.PhysicalCellId"
+#define CELLULRMGR_INFACE_CELLINFO_RFCN                    "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.RFCN"
+#define CELLULRMGR_INFACE_CELLINFO_SECTOR_ID               "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.SectorId"
+#define CELLULRMGR_INFACE_CELLINFO_IS_SERVING              "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.IsServing"
+#define CELLULRMGR_INFACE_CELLINFO_GPS                     "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.GPS"
+#define CELLULRMGR_INFACE_CELLINFO_SCAN_TYPE               "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.ScanType"
+#define CELLULRMGR_INFACE_CELLINFO_OPERATOR_NAME           "Device.Cellular.Interface.%d.X_RDK_CellInfo.%d.OperatorName"
 
 #define RBUS_DEVICE_MODE          "Device.X_RDKCENTRAL-COM_DeviceControl.DeviceNetworkingMode"
 
@@ -87,6 +103,7 @@ typedef struct
     uint GlobalCellIdSubFlag;
     uint ServingCellIdSubFlag;
     uint BandInfoSubFlag;
+    uint CellInfoSubFlag;
 
 }CellularMgr_rbusSubListForCellLocationSt;
 
@@ -110,7 +127,7 @@ typedef  struct
 
 void* CellularMgr_RBUS_Events_Monitor_Thread( void *arg );
 ANSC_STATUS CellularMgr_Rbus_String_EventPublish_OnValueChange(char *dm_event, void *prev_dm_value, void *dm_value, rbusValueType_t rbus_type);
-rbusError_t CellularMgrDmlPublishEventHandler(rbusHandle_t handle, rbusEventSubAction_t action, const char* eventName, rbusFilter_t filter, int32_t interval, bool* autoPublish);
+rbusError_t CellularMgrDmlSubscribeEventHandler(rbusHandle_t handle, rbusEventSubAction_t action, const char* eventName, rbusFilter_t filter, int32_t interval, bool* autoPublish);
 int CellularMgr_RBUS_Events_PublishLinkAvailableStatus( unsigned char bPrevLinkState, unsigned char bCurrentLinkState );
 int CellularMgr_RBUS_Events_PublishPhyConnectionStatus( unsigned char bPrevPhyState, unsigned char bCurrentPhyState );
 int CellularMgr_RBUS_Events_Publish_X_RDK_Enable( unsigned char bPreviousValue, unsigned char bCurrentValue );
