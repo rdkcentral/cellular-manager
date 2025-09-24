@@ -1172,6 +1172,12 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned
         ( TRUE == qmi_device_is_open( gpstQMIContext->qmiDevice ) ) )
     {
         ContextNASInfo   *nasCtx = &(gpstQMIContext->nasCtx);
+        ContextWDSInfo   *wdsCtx = &(pstQMIContext->wdsCtx);
+
+	if (NULL != wdsCtx && NULL != nasCtx)
+	{
+	    CELLULAR_HAL_DBG_PRINT("%s-%d: NAGA DEBUG: preferredRAT=%s, currentRAT=%s\n", nasCtx->preferredRAT, wdsCtx->currentRAT); 
+	}
 
         if( NULL != nasCtx->nasClient )
         {
