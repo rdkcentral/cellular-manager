@@ -1172,7 +1172,7 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned
         ( TRUE == qmi_device_is_open( gpstQMIContext->qmiDevice ) ) )
     {
         ContextNASInfo   *nasCtx = &(gpstQMIContext->nasCtx);
-        ContextWDSInfo   *wdsCtx = &(pstQMIContext->wdsCtx);
+        ContextWDSInfo   *wdsCtx = &(gpstQMIContext->wdsCtx);
 
 	if (NULL != wdsCtx && NULL != nasCtx)
 	{
