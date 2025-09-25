@@ -1172,12 +1172,6 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned
         ( TRUE == qmi_device_is_open( gpstQMIContext->qmiDevice ) ) )
     {
         ContextNASInfo   *nasCtx = &(gpstQMIContext->nasCtx);
-        ContextWDSInfo   *wdsCtx = &(gpstQMIContext->wdsCtx);
-
-	if (NULL != wdsCtx && NULL != nasCtx)
-	{
-	    CELLULAR_HAL_DBG_PRINT("%s-%d: NAGA DEBUG: preferredRAT=%s, currentRAT=%s\n", nasCtx->preferredRAT, wdsCtx->currentRAT); 
-	}
 
         if( NULL != nasCtx->nasClient )
         {
@@ -1219,6 +1213,12 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned
                             pTmp_cell_info[cnt].globalCellId = nasCtx->globalCellId;
                             pTmp_cell_info[cnt].TAC = nasCtx->trackingAreaCode;
                             pTmp_cell_info[cnt].TA = nasCtx->timingAdvance;
+
+			    char tmp_RAT[256];
+			    memset(tmp_RAT, '\0', sizeof(tmp_RAT));
+
+			    cellular_hal_qmi_get_current_radio_technology(tmp_RAT);
+			    CELLULAR_HAL_DBG_PRINT("%s-%d: NAGA-DEBUG: preferred=%s, current=%s\n", __FUNCTION__, __LINE__, nasCtx->preferredRAT, tmp_RAT);
                             snprintf(pTmp_cell_info[cnt].RAT, sizeof(pTmp_cell_info[cnt].RAT), "%s", nasCtx->preferredRAT);
                             snprintf(pTmp_cell_info[cnt].operatorName, sizeof(pTmp_cell_info[cnt].operatorName), "%s", nasCtx->operator_name);
                             pTmp_cell_info[cnt].MCC = pstPlmnInfo->MCC;
