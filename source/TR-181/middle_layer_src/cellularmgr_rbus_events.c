@@ -213,33 +213,33 @@ int CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo(CellularCellInfo *pPrevCellIn
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_UINT32);         
             }
-            if ( strncmp(pPrevCellInfo[i].RAT, pCurrentCellInfo[i].RAT,strlen(pCurrentCellInfo[i].RAT)) != 0 ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].RAT);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].RAT);
+            if ( strncmp(pPrevCellInfo[i].RAT, pCurrentCellInfo[i].RAT, strlen(pCurrentCellInfo[i].RAT)) != 0 ) {
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%s", pPrevCellInfo[i].RAT);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%s", pCurrentCellInfo[i].RAT);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_RAT, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_STRING);         
             }
             if ( pPrevCellInfo[i].RSSI != pCurrentCellInfo[i].RSSI ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].RSSI);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].RSSI);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%d", pPrevCellInfo[i].RSSI);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%d", pCurrentCellInfo[i].RSSI);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_RSSI, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_INT32);         
             }
             if ( pPrevCellInfo[i].RSRP != pCurrentCellInfo[i].RSRP ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].RSRP);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].RSRP);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%d", pPrevCellInfo[i].RSRP);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%d", pCurrentCellInfo[i].RSRP);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_RSRP, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_INT32);         
             }
             if ( pPrevCellInfo[i].RSRQ != pCurrentCellInfo[i].RSRQ ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].RSRQ);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].RSRQ);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%d", pPrevCellInfo[i].RSRQ);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%d", pCurrentCellInfo[i].RSRQ);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_RSRQ, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
@@ -262,8 +262,8 @@ int CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo(CellularCellInfo *pPrevCellIn
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_UINT32);         
             }
             if ( pPrevCellInfo[i].RFCN != pCurrentCellInfo[i].RFCN ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].MCC);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].MCC);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].RFCN);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].RFCN);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_RFCN, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
@@ -278,32 +278,32 @@ int CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo(CellularCellInfo *pPrevCellIn
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_UINT32);         
             }
             if ( pPrevCellInfo[i].isServing != pCurrentCellInfo[i].isServing ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].isServing);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].isServing);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%d", pPrevCellInfo[i].isServing);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%d", pCurrentCellInfo[i].isServing);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_IS_SERVING, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_BOOLEAN);         
             }
             if ( strncmp(pPrevCellInfo[i].GPS, pCurrentCellInfo[i].GPS, strlen(pCurrentCellInfo[i].GPS)) != 0 ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].GPS);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].GPS);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%s", pPrevCellInfo[i].GPS);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%s", pCurrentCellInfo[i].GPS);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_GPS, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_STRING);         
             }
             if ( strncmp(pPrevCellInfo[i].scanType, pCurrentCellInfo[i].scanType, strlen(pCurrentCellInfo[i].scanType)) != 0 ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].scanType);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].scanType);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%s", pPrevCellInfo[i].scanType);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%s", pCurrentCellInfo[i].scanType);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_SCAN_TYPE, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
                 CellularMgr_Rbus_String_EventPublish_OnValueChange(acTmpParamName, acTmpPrevValue, acTmpCurValue, RBUS_STRING);         
             }
              if ( strncmp(pPrevCellInfo[i].operatorName, pCurrentCellInfo[i].operatorName, strlen(pCurrentCellInfo[i].operatorName)) != 0 ) {
-                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%u", pPrevCellInfo[i].operatorName);
-                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%u", pCurrentCellInfo[i].operatorName);
+                snprintf(acTmpPrevValue, sizeof(acTmpPrevValue), "%s", pPrevCellInfo[i].operatorName);
+                snprintf(acTmpCurValue, sizeof(acTmpCurValue), "%s", pCurrentCellInfo[i].operatorName);
                 snprintf(acTmpParamName, sizeof(acTmpParamName), CELLULRMGR_INFACE_CELLINFO_OPERATOR_NAME, 1, (i+1));
 
                 CcspTraceInfo(("%s-%d: Publish DM(%s) Prev(%s) Current(%s)\n",__FUNCTION__, __LINE__, acTmpParamName,acTmpPrevValue,acTmpCurValue));
