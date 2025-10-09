@@ -1193,7 +1193,12 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned
                 int cnt = 0;
                 CellularCellInfo *pTmp_cell_info = NULL;
                 CellularCurrentPlmnInfoStruct *pstPlmnInfo = &(nasCtx->stPlmnInfo);
-                
+                char currRAT[256];
+                memset(currRAT, '\0', sizeof(currRAT));
+
+                // get current RAT from wdsCtx
+                (void)cellular_hal_qmi_get_current_radio_technology(currRAT);
+
                 pTmp_cell_info = (CellularCellInfo *) malloc( sizeof( CellularCellInfo ) * tmpTotalCellCnt );
                 if (pTmp_cell_info == NULL) {
                     CELLULAR_HAL_DBG_PRINT("%s-%d: failed to allocate memory for cell info copy\n", __FUNCTION__, __LINE__);
@@ -1213,11 +1218,12 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned
                             pTmp_cell_info[cnt].globalCellId = nasCtx->globalCellId;
                             pTmp_cell_info[cnt].TAC = nasCtx->trackingAreaCode;
                             pTmp_cell_info[cnt].TA = nasCtx->timingAdvance;
-                            snprintf(pTmp_cell_info[cnt].RAT, sizeof(pTmp_cell_info[cnt].RAT), "%s", nasCtx->preferredRAT);
+
                             snprintf(pTmp_cell_info[cnt].operatorName, sizeof(pTmp_cell_info[cnt].operatorName), "%s", nasCtx->operator_name);
                             pTmp_cell_info[cnt].MCC = pstPlmnInfo->MCC;
                             pTmp_cell_info[cnt].MNC = pstPlmnInfo->MNC;
                         }
+                        snprintf(pTmp_cell_info[cnt].RAT, sizeof(pTmp_cell_info[cnt].RAT), "%s", currRAT);
                         pTmp_cell_info[cnt].physicalCellId = pCellInfo->physical_cell_id;
                         pTmp_cell_info[cnt].RSRQ = pCellInfo->rsrq;
                         pTmp_cell_info[cnt].RSRP = pCellInfo->rsrp;
