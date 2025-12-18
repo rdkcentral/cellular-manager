@@ -1272,7 +1272,6 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
 
     guint16 absolute_rf_channel_number = 0;
     guint32 global_cell_id = 0;
-    guint16 serving_cell_id = 0;
     guint16 tracking_area_code = 0;
     guint32 timing_advance = 0;
     guint   bandInfo = 0;
@@ -1280,10 +1279,12 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
     GArray *pInterFreq = NULL;
     GArray *pIntraFreqCells = NULL;
 
-    int intraNeighborCnt = 0;
-    int interNeighborCnt = 0;
-    int totalCellCnt = 0;
-    int localCellCnt = 0;
+    guint16 serving_pci = 0;
+
+    int intraCnt = 0;
+    int interCnt = 0;
+    int totalCnt = 0;
+    int idx = 0;
 
     GTask *task = (GTask *)user_data;
     ContextDeviceOpen *pDeviceOpenCtx = g_task_get_task_data(task);
@@ -1293,7 +1294,7 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
 
     NASFrequencyLteCellInfo *pCellInfo = NULL;
 
-    // QMI request
+    // Finish QMI request
     output = qmi_client_nas_get_cell_location_info_finish(nasClient, result, &error);
     if (!output) {
         CELLULAR_HAL_DBG_PRINT("%s: QMI finish failed: %s\n",
@@ -1309,9 +1310,7 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
         goto CLEANUP;
     }
 
-    CELLULAR_HAL_DBG_PRINT("%s: QMI cell location info retrieved successfully\n", __FUNCTION__);
-
-    // Fetch Intra-frequency LTE info
+    // Intra-frequency LTE info
     if (!qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2(
             output,
             NULL,
@@ -1319,7 +1318,7 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
             &tracking_area_code,
             &global_cell_id,
             &absolute_rf_channel_number,
-            &serving_cell_id,
+            NULL,
             NULL,
             NULL,
             NULL,
@@ -1331,102 +1330,99 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
         goto CLEANUP;
     }
 
-    CELLULAR_HAL_DBG_PRINT("%s: IntraFreq raw cells=%u (includes serving cell)\n", __FUNCTION__, (pIntraFreqCells != NULL) ? pIntraFreqCells->len : 0);
-
-    if (!qmi_message_nas_get_cell_location_info_output_get_lte_info_timing_advance(
-            output, &timing_advance, &error)) {
-        CELLULAR_HAL_DBG_PRINT("%s: failed to get timing advance\n", __FUNCTION__);
-        g_clear_error(&error);
+    if (!pIntraFreqCells || pIntraFreqCells->len == 0) {
+        CELLULAR_HAL_DBG_PRINT("%s: No intra-frequency LTE cells\n", __FUNCTION__);
         goto CLEANUP;
+    }
+
+    // Serving cell - first intra-frequency cell
+    QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement *srv =
+        &g_array_index(pIntraFreqCells,
+            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement, 0);
+
+    serving_pci = srv->physical_cell_id;
+    intraCnt = pIntraFreqCells->len;
+
+    if (qmi_message_nas_get_cell_location_info_output_get_lte_info_timing_advance(
+            output, &timing_advance, &error) == FALSE) {
+        timing_advance = UINT32_MAX;
+        g_clear_error(&error);
     }
 
     bandInfo = eutra_band_info(absolute_rf_channel_number);
 
     nasCtx->globalCellId = global_cell_id;
-    nasCtx->servingCellId = serving_cell_id;
+    nasCtx->servingCellId = serving_pci;
     nasCtx->trackingAreaCode = tracking_area_code;
     nasCtx->timingAdvance = timing_advance;
     nasCtx->rfcn = absolute_rf_channel_number;
     nasCtx->bandInfo = bandInfo;
 
-    CELLULAR_HAL_DBG_PRINT("%s: ServingCell: GCI=%u PCI=%u TAC=%u RFCN=%u Band=%u TA=%u\n", __FUNCTION__,
-        nasCtx->globalCellId, nasCtx->servingCellId, nasCtx->trackingAreaCode,
-        nasCtx->rfcn, nasCtx->bandInfo, nasCtx->timingAdvance);
+    CELLULAR_HAL_DBG_PRINT("%s: ServingCell PCI=%u TAC=%u RFCN=%u Band=%u TA=%u\n",
+        __FUNCTION__, serving_pci, tracking_area_code,
+        absolute_rf_channel_number, bandInfo, timing_advance);
 
-    // Exclude serving cell from intra neighbors
-    if (pIntraFreqCells && pIntraFreqCells->len > 0)
-        intraNeighborCnt = pIntraFreqCells->len - 1;
-
-    CELLULAR_HAL_DBG_PRINT("%s: IntraFreq neighbors=%d (serving cell excluded)\n", __FUNCTION__, intraNeighborCnt);
-
-    // Fetch Inter-frequency LTE info
+    // Inter-frequency LTE info
     if (qmi_message_nas_get_cell_location_info_output_get_interfrequency_lte_info(
-            output, NULL, &pInterFreq, &error)) {
+            output, NULL, &pInterFreq, &error) && pInterFreq) {
 
-        if (pInterFreq) {
-            for (guint i = 0; i < pInterFreq->len; i++) {
-                QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement *freq =
-                    &g_array_index(pInterFreq,
-                                   QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement,
-                                   i);
-                if (freq && freq->cell)
-                    interNeighborCnt += freq->cell->len;
-            }
+        for (guint i = 0; i < pInterFreq->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement *freq =
+                &g_array_index(pInterFreq,
+                               QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement,
+                               i);
 
-	    CELLULAR_HAL_DBG_PRINT("%s: InterFreq EARFCN groups=%u, neighbor count=%u\n", __FUNCTION__, pInterFreq->len, interNeighborCnt);
+            if (freq && freq->cell)
+                interCnt += freq->cell->len;
         }
     } else {
         g_clear_error(&error);
     }
 
-    // get total cell count
-    totalCellCnt = intraNeighborCnt + interNeighborCnt;
+    totalCnt = intraCnt + interCnt;
 
-    CELLULAR_HAL_DBG_PRINT("%s: Total neighbors calculated: intra=%d inter=%d total=%d\n", __FUNCTION__,
-        intraNeighborCnt, interNeighborCnt, totalCellCnt);
+    CELLULAR_HAL_DBG_PRINT("%s: Cell count intra=%d inter=%d total=%d\n",
+        __FUNCTION__, intraCnt, interCnt, totalCnt);
 
-    if (totalCellCnt <= 0)
+    if (totalCnt == 0)
         goto UPDATE_CTX;
 
-    if (totalCellCnt > CELLULAR_QMI_INTER_FREQ_MAX_CNT)
-        totalCellCnt = CELLULAR_QMI_INTER_FREQ_MAX_CNT;
+    if (totalCnt > CELLULAR_QMI_INTER_FREQ_MAX_CNT)
+        totalCnt = CELLULAR_QMI_INTER_FREQ_MAX_CNT;
 
-    pCellInfo = calloc(totalCellCnt, sizeof(NASFrequencyLteCellInfo));
-    if (!pCellInfo) {
-        CELLULAR_HAL_DBG_PRINT("%s: memory allocation failed\n", __FUNCTION__);
+    pCellInfo = calloc(totalCnt, sizeof(NASFrequencyLteCellInfo));
+    if (!pCellInfo)
         goto CLEANUP;
+
+    // Intra-frequency cells
+    for (guint i = 0; i < pIntraFreqCells->len && idx < totalCnt; i++) {
+        QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement *cell =
+            &g_array_index(pIntraFreqCells,
+                           QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement,
+                           i);
+
+        pCellInfo[idx].physical_cell_id = cell->physical_cell_id;
+        pCellInfo[idx].rfcn = absolute_rf_channel_number;
+
+        pCellInfo[idx].rsrp = (cell->rsrp != QMI_NAS_RSRP_UNKNOWN) ? cell->rsrp / 10.0 : 0.0;
+        pCellInfo[idx].rsrq = (cell->rsrq != QMI_NAS_RSRQ_UNKNOWN) ? cell->rsrq / 10.0 : 0.0;
+        pCellInfo[idx].rssi = (cell->rssi != QMI_NAS_RSSI_UNKNOWN) ? cell->rssi / 10.0 : 0.0;
+
+        CELLULAR_HAL_DBG_PRINT("%s: IntraCell[%d]: PCI=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f RFCN=%u%s\n",
+            __FUNCTION__, idx,
+            pCellInfo[idx].physical_cell_id,
+            pCellInfo[idx].rsrp,
+            pCellInfo[idx].rsrq,
+            pCellInfo[idx].rssi,
+            pCellInfo[idx].rfcn,
+            (cell->physical_cell_id == serving_pci) ? " (SERVING)" : "");
+
+        idx++;
     }
 
-    // Fill intra-frequency neighbors
-    // NOTE: skip serving cell
-    if (pIntraFreqCells) {
-        for (guint i = 0; i < pIntraFreqCells->len && localCellCnt < totalCellCnt; i++) {
-            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement *cell =
-                &g_array_index(pIntraFreqCells,
-                               QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement,
-                               i);
-
-            if (cell->physical_cell_id == serving_cell_id)
-                continue;
-
-            pCellInfo[localCellCnt].physical_cell_id = cell->physical_cell_id;
-            pCellInfo[localCellCnt].rsrq = cell->rsrq * 0.1;
-            pCellInfo[localCellCnt].rsrp = cell->rsrp * 0.1;
-            pCellInfo[localCellCnt].rssi = cell->rssi * 0.1;
-            pCellInfo[localCellCnt].rfcn = absolute_rf_channel_number;
-
-	    CELLULAR_HAL_DBG_PRINT("%s: IntraNeighbor[%d]: PCI=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f RFCN=%u\n", __FUNCTION__,
-                localCellCnt, pCellInfo[localCellCnt].physical_cell_id, pCellInfo[localCellCnt].rsrp, 
-		pCellInfo[localCellCnt].rsrq, pCellInfo[localCellCnt].rssi, pCellInfo[localCellCnt].rfcn);
-
-	    // increment cell cnt index
-            localCellCnt++;
-        }
-    }
-
-    // Fill inter-frequency neighbors
+    // Inter-frequency cells
     if (pInterFreq) {
-        for (guint i = 0; i < pInterFreq->len && localCellCnt < totalCellCnt; i++) {
+        for (guint i = 0; i < pInterFreq->len && idx < totalCnt; i++) {
             QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement *freq =
                 &g_array_index(pInterFreq,
                                QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement,
@@ -1435,40 +1431,43 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
             if (!freq || !freq->cell)
                 continue;
 
-            for (guint k = 0; k < freq->cell->len && localCellCnt < totalCellCnt; k++) {
+            for (guint k = 0; k < freq->cell->len && idx < totalCnt; k++) {
                 QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement *cell =
                     &g_array_index(freq->cell,
                                    QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement,
                                    k);
 
-                pCellInfo[localCellCnt].physical_cell_id = cell->physical_cell_id;
-                pCellInfo[localCellCnt].rsrq = cell->rsrq * 0.1;
-                pCellInfo[localCellCnt].rsrp = cell->rsrp * 0.1;
-                pCellInfo[localCellCnt].rssi = cell->rssi * 0.1;
-                pCellInfo[localCellCnt].rfcn = freq->eutra_absolute_rf_channel_number;
+                pCellInfo[idx].physical_cell_id = cell->physical_cell_id;
+                pCellInfo[idx].rfcn = freq->eutra_absolute_rf_channel_number;
 
-		CELLULAR_HAL_DBG_PRINT("%s: InterNeighbor[%d]: RFCN=%u PCI=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f\n", __FUNCTION__,
-                    localCellCnt, freq->eutra_absolute_rf_channel_number, pCellInfo[localCellCnt].physical_cell_id,
-                    pCellInfo[localCellCnt].rsrp, pCellInfo[localCellCnt].rsrq, pCellInfo[localCellCnt].rssi);
+                pCellInfo[idx].rsrp = (cell->rsrp != QMI_NAS_RSRP_UNKNOWN) ? cell->rsrp / 10.0 : 0.0;
+                pCellInfo[idx].rsrq = (cell->rsrq != QMI_NAS_RSRQ_UNKNOWN) ? cell->rsrq / 10.0 : 0.0;
+                pCellInfo[idx].rssi = (cell->rssi != QMI_NAS_RSSI_UNKNOWN) ? cell->rssi / 10.0 : 0.0;
 
-		// increment cell cnt index
-                localCellCnt++;
+                CELLULAR_HAL_DBG_PRINT("%s: InterCell[%d]: PCI=%u RFCN=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f\n",
+                    __FUNCTION__, idx,
+                    pCellInfo[idx].physical_cell_id,
+                    pCellInfo[idx].rfcn,
+                    pCellInfo[idx].rsrp,
+                    pCellInfo[idx].rsrq,
+                    pCellInfo[idx].rssi);
+
+                idx++;
             }
         }
     }
 
 UPDATE_CTX:
-    if (nasCtx->pCellInfo) {
+    if (nasCtx->pCellInfo)
         free(nasCtx->pCellInfo);
-        nasCtx->pCellInfo = NULL;
-    }
 
     nasCtx->pCellInfo = pCellInfo;
-    nasCtx->iTotalNoofIntraFreqCellInfo = intraNeighborCnt; // cnt excluding serving cell
-    nasCtx->iTotalNoofCellInfo = localCellCnt;
+    nasCtx->iTotalNoofIntraFreqCellInfo = intraCnt;
+    nasCtx->iTotalNoofCellInfo = idx;
 
-    CELLULAR_HAL_DBG_PRINT("%s: Context updated: iTotalNoofCellInfo=%u iTotalNoofIntraFreqCellInfo=%u\n", __FUNCTION__,
-        nasCtx->iTotalNoofCellInfo, nasCtx->iTotalNoofIntraFreqCellInfo);
+    CELLULAR_HAL_DBG_PRINT("%s: Context updated: total=%u intra=%u\n",
+        __FUNCTION__, nasCtx->iTotalNoofCellInfo,
+        nasCtx->iTotalNoofIntraFreqCellInfo);
 
 CLEANUP:
     if (pIntraFreqCells) g_array_free(pIntraFreqCells, TRUE);
