@@ -1404,9 +1404,9 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
         pCellInfo[idx].physical_cell_id = cell->physical_cell_id;
         pCellInfo[idx].rfcn = absolute_rf_channel_number;
 
-        pCellInfo[idx].rsrp = (cell->rsrp != QMI_NAS_RSRP_UNKNOWN) ? cell->rsrp / 10.0 : 0.0;
-        pCellInfo[idx].rsrq = (cell->rsrq != QMI_NAS_RSRQ_UNKNOWN) ? cell->rsrq / 10.0 : 0.0;
-        pCellInfo[idx].rssi = (cell->rssi != QMI_NAS_RSSI_UNKNOWN) ? cell->rssi / 10.0 : 0.0;
+	pCellInfo[idx].rsrp = cell->rsrp / 10.0;
+        pCellInfo[idx].rsrq = cell->rsrq / 10.0;
+        pCellInfo[idx].rssi = cell->rssi / 10.0;
 
         CELLULAR_HAL_DBG_PRINT("%s: IntraCell[%d]: PCI=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f RFCN=%u%s\n",
             __FUNCTION__, idx,
@@ -1440,9 +1440,9 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
                 pCellInfo[idx].physical_cell_id = cell->physical_cell_id;
                 pCellInfo[idx].rfcn = freq->eutra_absolute_rf_channel_number;
 
-                pCellInfo[idx].rsrp = (cell->rsrp != QMI_NAS_RSRP_UNKNOWN) ? cell->rsrp / 10.0 : 0.0;
-                pCellInfo[idx].rsrq = (cell->rsrq != QMI_NAS_RSRQ_UNKNOWN) ? cell->rsrq / 10.0 : 0.0;
-                pCellInfo[idx].rssi = (cell->rssi != QMI_NAS_RSSI_UNKNOWN) ? cell->rssi / 10.0 : 0.0;
+		pCellInfo[idx].rsrp = cell->rsrp / 10.0;
+                pCellInfo[idx].rsrq = cell->rsrq / 10.0;
+                pCellInfo[idx].rssi = cell->rssi / 10.0;
 
                 CELLULAR_HAL_DBG_PRINT("%s: InterCell[%d]: PCI=%u RFCN=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f\n",
                     __FUNCTION__, idx,
