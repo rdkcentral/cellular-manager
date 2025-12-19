@@ -500,6 +500,12 @@ static void cellular_hal_qmi_network_scan_data_collection_step( GTask *task );
 static void cellular_hal_qmi_get_profile_list_cb (QmiClientWds *wdsClient,
                                                      GAsyncResult *result,
                                                      gpointer  user_data);
+
+static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
+                                                GAsyncResult *result,
+                                                gpointer user_data);
+void cellular_qmi_request_cell_location_info(QmiClient *client);
+
 /**********************************************************************
                 FUNCTION DEFINITION
 **********************************************************************/
@@ -1154,12 +1160,14 @@ int cellular_hal_qmi_get_network_signal_information(CellularSignalInfoStruct *si
     }
 }
 
-void cellular_qmi_request_cell_location_info(QmiClientNas *nasClient)
+void cellular_qmi_request_cell_location_info(QmiClient *client)
 {
-    if (!nasClient) {
-        CELLULAR_HAL_DBG_PRINT("%s: nasClient is NULL\n", __FUNCTION__);
+    if (!client) {
+        CELLULAR_HAL_DBG_PRINT("%s: client is NULL\n", __FUNCTION__);
         return;
     }
+
+    QmiClientNas *nasClient = QMI_CLIENT_NAS(client);
 
     CELLULAR_HAL_DBG_PRINT("%s: sending QMI NAS get-cell-location-info request\n",
                            __FUNCTION__);
