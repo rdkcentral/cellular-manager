@@ -1335,18 +1335,18 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
         goto CLEANUP;
     }
 
-    // Serving cell - first intra-frequency cell
-    QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement *srv =
-        &g_array_index(pIntraFreqCells,
-            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement, 0);
-
-    serving_pci = srv->physical_cell_id;
     intraCnt = pIntraFreqCells->len;
 
-    if (qmi_message_nas_get_cell_location_info_output_get_lte_info_timing_advance(
-            output, &timing_advance, &error) == FALSE) {
-        timing_advance = UINT32_MAX;
-        g_clear_error(&error);
+    // Serving PCI comes from first intra cell (QMI spec)
+    serving_pci =
+        g_array_index(pIntraFreqCells,
+            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement, 0)
+            .physical_cell_id;
+
+    // Get timing advance for serving cell
+    if (!qmi_message_nas_get_cell_location_info_output_get_lte_info_timing_advance(
+            output, &timing_advance, NULL)) {
+        timing_advance = 0;
     }
 
     bandInfo = eutra_band_info(absolute_rf_channel_number);
@@ -1403,19 +1403,21 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
 
         pCellInfo[idx].physical_cell_id = cell->physical_cell_id;
         pCellInfo[idx].rfcn = absolute_rf_channel_number;
+        pCellInfo[idx].rsrp = (cell->rsrp < -32768) ? 0.0 : cell->rsrp / 10.0;
+        pCellInfo[idx].rsrq = (cell->rsrq < -32768) ? 0.0 : cell->rsrq / 10.0;
+        pCellInfo[idx].rssi = (cell->rssi < -32768) ? 0.0 : cell->rssi / 10.0;
+        // Only serving cell gets TA
+        pCellInfo[idx].timing_advance = (cell->physical_cell_id == serving_pci) ? timing_advance : 0;
 
-	pCellInfo[idx].rsrp = cell->rsrp / 10.0;
-        pCellInfo[idx].rsrq = cell->rsrq / 10.0;
-        pCellInfo[idx].rssi = cell->rssi / 10.0;
-
-        CELLULAR_HAL_DBG_PRINT("%s: IntraCell[%d]: PCI=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f RFCN=%u%s\n",
+        CELLULAR_HAL_DBG_PRINT("%s: IntraCell[%d]: PCI=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f RFCN=%u%s TA=%u\n",
             __FUNCTION__, idx,
             pCellInfo[idx].physical_cell_id,
             pCellInfo[idx].rsrp,
             pCellInfo[idx].rsrq,
             pCellInfo[idx].rssi,
             pCellInfo[idx].rfcn,
-            (cell->physical_cell_id == serving_pci) ? " (SERVING)" : "");
+            (cell->physical_cell_id == serving_pci) ? " (SERVING)" : "",
+            pCellInfo[idx].timing_advance);
 
         idx++;
     }
@@ -1439,10 +1441,11 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
 
                 pCellInfo[idx].physical_cell_id = cell->physical_cell_id;
                 pCellInfo[idx].rfcn = freq->eutra_absolute_rf_channel_number;
-
-		pCellInfo[idx].rsrp = cell->rsrp / 10.0;
-                pCellInfo[idx].rsrq = cell->rsrq / 10.0;
-                pCellInfo[idx].rssi = cell->rssi / 10.0;
+                pCellInfo[idx].rsrp = (cell->rsrp < -32768) ? 0.0 : cell->rsrp / 10.0;
+                pCellInfo[idx].rsrq = (cell->rsrq < -32768) ? 0.0 : cell->rsrq / 10.0;
+                pCellInfo[idx].rssi = (cell->rssi < -32768) ? 0.0 : cell->rssi / 10.0;
+                // Inter-freq cells do not have TA
+                pCellInfo[idx].timing_advance = 0;
 
                 CELLULAR_HAL_DBG_PRINT("%s: InterCell[%d]: PCI=%u RFCN=%u RSRP=%.1f RSRQ=%.1f RSSI=%.1f\n",
                     __FUNCTION__, idx,
