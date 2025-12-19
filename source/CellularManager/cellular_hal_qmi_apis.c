@@ -1154,6 +1154,26 @@ int cellular_hal_qmi_get_network_signal_information(CellularSignalInfoStruct *si
     }
 }
 
+void cellular_qmi_request_cell_location_info(QmiClientNas *nasClient)
+{
+    if (!nasClient) {
+        CELLULAR_HAL_DBG_PRINT("%s: nasClient is NULL\n", __FUNCTION__);
+        return;
+    }
+
+    CELLULAR_HAL_DBG_PRINT("%s: sending QMI NAS get-cell-location-info request\n",
+                           __FUNCTION__);
+
+    qmi_client_nas_get_cell_location_info(
+        nasClient,
+        NULL,
+        10,
+        NULL,
+        cellular_qmi_get_cell_location_info, // async callback
+        NULL
+    );
+}
+
 // NOTE: Caller needs to take care of sending pCell_info with sufficient memory allocated, minimum CELLULAR_QMI_INTER_FREQ_MAX_CNT
 int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info,
                                           unsigned int *pTotal_cell_count)
