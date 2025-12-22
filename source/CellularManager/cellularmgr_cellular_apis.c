@@ -1858,8 +1858,9 @@ int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo,
         retVal = cellular_hal_get_cell_info( cell_info, &total_cell_count );
         if (retVal != RETURN_OK) {
             CcspTraceError(("%s:%d failed to get cell info from hal\n", __FUNCTION__, __LINE__));
-	    total_cell_count = 0;
-            memset(cell_info, 0, sizeof(cell_info));
+	    memset(cell_info, 0, sizeof(CellularCellInfo) * prev_total_cell_count);
+            total_cell_count = 0;
+
             return RETURN_ERROR;
         }
 
