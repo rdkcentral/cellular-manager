@@ -1846,7 +1846,7 @@ int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo,
         unsigned int prev_total_cell_count = total_cell_count;
 
         if (prev_total_cell_count > CELLULAR_INTRA_INTER_FREQ_MAX_CNT) {
-            CcspTraceError(("%s:%d previous total cell count (%u) greater than existing memory (%u)\n", __FUNCTION__, __LINE__, 
+            CcspTraceError(("[Cell Info] %s:%d previous total cell count (%u) greater than existing memory (%u)\n", __FUNCTION__, __LINE__, 
                 prev_total_cell_count, CELLULAR_INTRA_INTER_FREQ_MAX_CNT));
             prev_total_cell_count = CELLULAR_INTRA_INTER_FREQ_MAX_CNT;
         }
@@ -1857,7 +1857,7 @@ int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo,
         // fetch from hal qmi
         retVal = cellular_hal_get_cell_info( cell_info, &total_cell_count );
         if (retVal != RETURN_OK) {
-            CcspTraceError(("%s:%d failed to get cell info from hal\n", __FUNCTION__, __LINE__));
+            CcspTraceError(("[Cell Info] %s:%d failed to get cell info from hal\n", __FUNCTION__, __LINE__));
 	    memset(cell_info, 0, sizeof(CellularCellInfo) * prev_total_cell_count);
             total_cell_count = 0;
 
@@ -1869,7 +1869,7 @@ int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo,
     }
     
     if ( total_cell_count > CELLULAR_INTRA_INTER_FREQ_MAX_CNT ) {
-        CcspTraceError(("%s:%d total cell count (%u) greater than existing memory (%u)\n", __FUNCTION__, __LINE__, 
+        CcspTraceError(("[Cell Info] %s:%d total cell count (%u) greater than existing memory (%u)\n", __FUNCTION__, __LINE__, 
             total_cell_count, CELLULAR_INTRA_INTER_FREQ_MAX_CNT));
         //re-assign count to fit mem size
         total_cell_count = CELLULAR_INTRA_INTER_FREQ_MAX_CNT;
@@ -1884,7 +1884,7 @@ int CellularMgr_GetCellInformation( PCELLULAR_INTERFACE_CELL_INFO *ppstCellInfo,
 
             pstTmpCellInfo = (PCELLULAR_INTERFACE_CELL_INFO) malloc ( sizeof(CELLULAR_INTERFACE_CELL_INFO) * total_cell_count );
             if (pstTmpCellInfo == NULL) {
-                CcspTraceError(("%s:%d failed to allocate memory\n", __FUNCTION__, __LINE__));
+                CcspTraceError(("[Cell Info] %s:%d failed to allocate memory\n", __FUNCTION__, __LINE__));
                 return RETURN_ERROR;
             }
 

@@ -54,6 +54,7 @@
 #define  CELLULAR_QMI_SAFE_FREE(ptr) do { if (ptr) { free(ptr); ptr = NULL; } } while(0)
 
 #define CELL_INFO_RETRY_INTERVAL_SEC		30    // seconds
+#define CELL_INFO_PERIODIC_RETRY_INTERVAL_SEC	900   // 15 mins
 #define CELL_INFO_RETRY_TIMEOUT_SEC 		600   // 10 mins
 
 /**********************************************************************
@@ -300,6 +301,8 @@ typedef struct
 typedef struct {
     ContextNASInfo *nasCtx;
     int elapsed; // seconds
+    int interval_sec;     // current retry interval
+    gboolean validInfoObtained; // flag to switch interval
 } CellInfoRetryData;
 
 typedef struct 
@@ -1173,7 +1176,7 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info,
                                           unsigned int *pTotal_cell_count)
 {
     if (!pCell_info || !pTotal_cell_count) {
-        CELLULAR_HAL_DBG_PRINT("%s: invalid input\n", __FUNCTION__);
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: invalid input\n", __FUNCTION__);
         return RETURN_ERROR;
     }
 
@@ -1181,14 +1184,14 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info,
 
     if (!gpstQMIContext || !gpstQMIContext->qmiDevice ||
         !qmi_device_is_open(gpstQMIContext->qmiDevice)) {
-        CELLULAR_HAL_DBG_PRINT("%s: QMI not ready\n", __FUNCTION__);
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: QMI not ready\n", __FUNCTION__);
         return RETURN_ERROR;
     }
 
     ContextNASInfo *nasCtx = &gpstQMIContext->nasCtx;
     if (!nasCtx->nasClient || !nasCtx->pCellInfo ||
         nasCtx->iTotalNoofCellInfo == 0) {
-        CELLULAR_HAL_DBG_PRINT("%s: NAS cell info not available\n", __FUNCTION__);
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: NAS cell info not available\n", __FUNCTION__);
         return RETURN_ERROR;
     }
 
@@ -1270,16 +1273,14 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
 
     output = qmi_client_nas_get_cell_location_info_finish(nasClient, result, &error);
     if (!output) {
-        CELLULAR_HAL_DBG_PRINT("%s: QMI finish failed: %s\n",
-                               __FUNCTION__, error ? error->message : "unknown");
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: QMI finish failed: %s\n", __FUNCTION__, error ? error->message : "unknown");
         g_clear_error(&error);
         nasCtx->bCellInfoRequestInProgress = false;
         return;
     }
 
     if (!qmi_message_nas_get_cell_location_info_output_get_result(output, &error)) {
-        CELLULAR_HAL_DBG_PRINT("%s: QMI result error: %s\n",
-                               __FUNCTION__, error ? error->message : "unknown");
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: QMI result error: %s\n", __FUNCTION__, error ? error->message : "unknown");
         g_clear_error(&error);
         goto CLEANUP;
     }
@@ -1295,7 +1296,7 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
             NULL, NULL, NULL, NULL,
             &pIntraFreqCells,
             &error)) {
-        CELLULAR_HAL_DBG_PRINT("%s: failed to get intrafrequency LTE info\n", __FUNCTION__);
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: failed to get intrafrequency LTE info\n", __FUNCTION__);
         g_clear_error(&error);
         goto CLEANUP;
     }
@@ -1326,8 +1327,7 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
 
     totalCnt = intraCnt + interCnt;
 
-    CELLULAR_HAL_DBG_PRINT("%s: Cell count Intra=%d Inter=%d Total=%d\n",
-        __FUNCTION__, intraCnt, interCnt, totalCnt);
+    CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: Cell count Intra=%d Inter=%d Total=%d\n", __FUNCTION__, intraCnt, interCnt, totalCnt);
 
     if (totalCnt == 0)
         goto CLEANUP;
@@ -1402,7 +1402,7 @@ static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
     }
 
     if (idx > 0 && nasCtx->iTotalNoofCellInfo == 0) {
-        CELLULAR_HAL_DBG_PRINT("%s: First valid cell info received, %d cells\n", __FUNCTION__, idx);
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: First valid cell info received, %d cells\n", __FUNCTION__, idx);
     }
 
     // reset flag
@@ -1418,19 +1418,14 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
 {
     CellInfoRetryData *retryData = (CellInfoRetryData *)user_data;
 
-    CELLULAR_HAL_DBG_PRINT("%s Callback triggered, elapsed=%d seconds\n", __FUNCTION__, retryData->elapsed);
-
-    // Stop timer after timeout
-    if (retryData->elapsed >= CELL_INFO_RETRY_TIMEOUT_SEC) {
-        CELLULAR_HAL_DBG_PRINT("%s Timeout reached (%d sec), stopping retries\n", __FUNCTION__, retryData->elapsed);
-        g_free(retryData);
-        return FALSE;
-    }
+    CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Callback triggered, elapsed=%d seconds\n", __FUNCTION__, retryData->elapsed);
 
     ContextNASInfo *nasCtx = retryData->nasCtx;
 
-    if (nasCtx->bIsValidNASClient && nasCtx->nasClient && !nasCtx->bCellInfoRequestInProgress) {
-        CELLULAR_HAL_DBG_PRINT("%s Sending QMI cell location info request\n", __FUNCTION__);
+    if (nasCtx->bIsValidNASClient && nasCtx->nasClient &&
+        !nasCtx->bCellInfoRequestInProgress)
+    {
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Sending QMI cell location info request\n", __FUNCTION__);
         nasCtx->bCellInfoRequestInProgress = true;
 
         qmi_client_nas_get_cell_location_info(
@@ -1441,27 +1436,42 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
             (GAsyncReadyCallback)cellular_qmi_get_cell_location_info,
             nasCtx
         );
-    } else {
+    }
+    else
+    {
         if (!nasCtx->bIsValidNASClient || !nasCtx->nasClient) {
-            CELLULAR_HAL_DBG_PRINT("%s NAS client not ready\n", __FUNCTION__);
-        } else if (nasCtx->bCellInfoRequestInProgress) {
-            CELLULAR_HAL_DBG_PRINT("%s Previous request still in progress\n", __FUNCTION__);
+            CELLULAR_HAL_DBG_PRINT("[Cell Info] %s NAS client not ready\n", __FUNCTION__);
+        } else {
+            CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Previous request still in progress\n", __FUNCTION__);
         }
     }
 
-    retryData->elapsed += CELL_INFO_RETRY_INTERVAL_SEC;
-    return TRUE; // continue timer
+    retryData->elapsed += retryData->interval_sec;
+
+    // Check if valid cell info obtained
+    if (!retryData->validInfoObtained && nasCtx->cellInfoIsValid)
+    {
+        // Switch to longer interval for periodic updates
+        retryData->interval_sec = CELL_INFO_PERIODIC_RETRY_INTERVAL_SEC;
+        retryData->elapsed = 0;
+        retryData->validInfoObtained = TRUE;
+        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Valid cell info found, switching to peirodic fetch interval\n", __FUNCTION__);
+    }
+
+    return TRUE;
 }
 
 static void qmi_start_cell_info_retry_timer(ContextNASInfo *nasCtx)
 {
-    CELLULAR_HAL_DBG_PRINT("%s Starting cell info retry timer\n", __FUNCTION__);
+    CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Starting cell info retry timer\n", __FUNCTION__);
 
     CellInfoRetryData *data = g_new0(CellInfoRetryData, 1);
     data->nasCtx = nasCtx;
     data->elapsed = 0;
+    data->interval_sec = CELL_INFO_RETRY_INTERVAL_SEC; // 30 sec boot interval
+    data->validInfoObtained = FALSE;
 
-    g_timeout_add_seconds(CELL_INFO_RETRY_INTERVAL_SEC,
+    g_timeout_add_seconds(data->interval_sec,
                           qmi_retry_cell_info_cb,
                           data);
 }
