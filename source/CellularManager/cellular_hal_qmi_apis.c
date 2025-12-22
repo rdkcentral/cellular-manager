@@ -1449,7 +1449,8 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
     retryData->elapsed += retryData->interval_sec;
 
     // Check if valid cell info obtained
-    if (!retryData->validInfoObtained && nasCtx->cellInfoIsValid)
+    if ( (!retryData->validInfoObtained) && (nasCtx->pCellInfo != NULL) &&
+         (nasCtx->iTotalNoofCellInfo > 0) )
     {
         // Switch to longer interval for periodic updates
         retryData->interval_sec = CELL_INFO_PERIODIC_RETRY_INTERVAL_SEC;
