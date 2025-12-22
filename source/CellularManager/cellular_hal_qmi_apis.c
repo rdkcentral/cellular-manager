@@ -1442,10 +1442,11 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
             nasCtx
         );
     } else {
-        if (!nasCtx->bIsValidNASClient || !nasCtx->nasClient)
+        if (!nasCtx->bIsValidNASClient || !nasCtx->nasClient) {
             CELLULAR_HAL_DBG_PRINT("%s NAS client not ready\n", __FUNCTION__);
-        else if (nasCtx->bCellInfoRequestInProgress)
+        } else if (nasCtx->bCellInfoRequestInProgress) {
             CELLULAR_HAL_DBG_PRINT("%s Previous request still in progress\n", __FUNCTION__);
+        }
     }
 
     retryData->elapsed += CELL_INFO_RETRY_INTERVAL_SEC;
