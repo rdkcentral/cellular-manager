@@ -62,11 +62,6 @@
 
 /* Global Declaration */
 
-typedef struct {
-    ContextNASInfo *nasCtx;
-    int elapsed; // seconds
-} CellInfoRetryData;
-
 typedef enum {
     MODEM_OPEN_STATE_BEGIN                  = 1,
     MODEM_OPEN_STATE_DEVICE_OPEN,
@@ -301,6 +296,11 @@ typedef struct
     guint8                          bCellInfoRequestInProgress;
 
 } ContextNASInfo;
+
+typedef struct {
+    ContextNASInfo *nasCtx;
+    int elapsed; // seconds
+} CellInfoRetryData;
 
 typedef struct 
 {
@@ -1418,8 +1418,11 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
 {
     CellInfoRetryData *retryData = (CellInfoRetryData *)user_data;
 
+    CELLULAR_HAL_DBG_PRINT("%s Callback triggered, elapsed=%d seconds\n", __FUNCTION__, retryData->elapsed);
+
     // Stop timer after timeout
     if (retryData->elapsed >= CELL_INFO_RETRY_TIMEOUT_SEC) {
+        CELLULAR_HAL_DBG_PRINT("%s Timeout reached (%d sec), stopping retries\n", __FUNCTION__, retryData->elapsed);
         g_free(retryData);
         return FALSE;
     }
@@ -1427,7 +1430,7 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
     ContextNASInfo *nasCtx = retryData->nasCtx;
 
     if (nasCtx->bIsValidNASClient && nasCtx->nasClient && !nasCtx->bCellInfoRequestInProgress) {
-        // mark flag
+        CELLULAR_HAL_DBG_PRINT("%s Sending QMI cell location info request\n", __FUNCTION__);
         nasCtx->bCellInfoRequestInProgress = true;
 
         qmi_client_nas_get_cell_location_info(
@@ -1438,6 +1441,11 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
             (GAsyncReadyCallback)cellular_qmi_get_cell_location_info,
             nasCtx
         );
+    } else {
+        if (!nasCtx->bIsValidNASClient || !nasCtx->nasClient)
+            CELLULAR_HAL_DBG_PRINT("%s NAS client not ready\n", __FUNCTION__);
+        else if (nasCtx->bCellInfoRequestInProgress)
+            CELLULAR_HAL_DBG_PRINT("%s Previous request still in progress\n", __FUNCTION__);
     }
 
     retryData->elapsed += CELL_INFO_RETRY_INTERVAL_SEC;
@@ -1446,6 +1454,8 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
 
 static void qmi_start_cell_info_retry_timer(ContextNASInfo *nasCtx)
 {
+    CELLULAR_HAL_DBG_PRINT("%s Starting cell info retry timer\n", __FUNCTION__);
+
     CellInfoRetryData *data = g_new0(CellInfoRetryData, 1);
     data->nasCtx = nasCtx;
     data->elapsed = 0;
