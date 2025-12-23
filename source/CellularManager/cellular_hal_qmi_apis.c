@@ -506,6 +506,7 @@ static void cellular_hal_qmi_monitor_device_registration_context_free( ContextMo
 static void cellular_hal_qmi_get_next_profile_settings (ContextProfileList *inner_ctx);
 static void cellular_hal_qmi_get_network_packet_stats_step( GTask *task );
 static void cellular_hal_qmi_get_current_plmn_information_step( GTask *task );
+static void cellular_qmi_trigger_plmn_refresh(ContextNASInfo *nasCtx);
 static int cellular_hal_qmi_network_scan_data_collection_task( void );
 static void cellular_hal_qmi_network_scan_data_collection_step( GTask *task );
 
@@ -1441,7 +1442,7 @@ CLEANUP:
     if (output) qmi_message_nas_get_cell_location_info_output_unref(output);
 }
 
-static gboolean qmi_retry_cell_info_cb(gpointer user_data)
+static gboolean cellular_qmi_retry_cell_info_cb(gpointer user_data)
 {
     CellInfoRetryData *retryData = (CellInfoRetryData *)user_data;
     ContextNASInfo *nasCtx = retryData->nasCtx;
@@ -1479,12 +1480,12 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
         if (!nasCtx->bPlmnRefreshTriggered)
         {
             nasCtx->bPlmnRefreshTriggered = TRUE;
-            qmi_trigger_plmn_refresh(nasCtx);
+            cellular_qmi_trigger_plmn_refresh(nasCtx);
         }
 
         // Switch to longer interval for periodic updates
         nasCtx->cellInfoTimerId = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, CELL_INFO_PERIODIC_RETRY_INTERVAL_SEC,
-                                      qmi_retry_cell_info_cb, retryData, g_free);
+                                      cellular_qmi_retry_cell_info_cb, retryData, g_free);
 
 	return FALSE; // stop current timer
     }
@@ -1492,7 +1493,7 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
     return TRUE;
 }
 
-static void qmi_start_cell_info_retry_timer(ContextNASInfo *nasCtx)
+static void cellular_qmi_start_cell_info_retry_timer(ContextNASInfo *nasCtx)
 {
     CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Starting cell info retry timer\n", __FUNCTION__);
 
@@ -1502,7 +1503,7 @@ static void qmi_start_cell_info_retry_timer(ContextNASInfo *nasCtx)
 
     // start timer
     nasCtx->cellInfoTimerId = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, CELL_INFO_RETRY_INTERVAL_SEC,
-                                  qmi_retry_cell_info_cb, data, g_free);
+                                  cellular_qmi_retry_cell_info_cb, data, g_free);
 }
 
 static void cellular_hal_qmi_get_modem_identification (QmiClientDms *dmsClient,
@@ -2128,7 +2129,7 @@ static void cellular_hal_qmi_device_open_step( GTask *task )
                     nasCtx);
 
                 // Start periodic retry timer to fetch cell info asynchronously
-                qmi_start_cell_info_retry_timer(nasCtx);
+                cellular_qmi_start_cell_info_retry_timer(nasCtx);
             }
 
 
@@ -4596,7 +4597,7 @@ static void cellular_hal_qmi_get_current_plmn_information_context_free( ContextG
     }
 }
 
-static void qmi_trigger_plmn_refresh(ContextNASInfo *nasCtx)
+static void cellular_qmi_trigger_plmn_refresh(ContextNASInfo *nasCtx)
 {
     if (!nasCtx->nasClient) {
         return;
