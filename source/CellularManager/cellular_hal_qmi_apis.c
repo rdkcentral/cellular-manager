@@ -295,13 +295,12 @@ typedef struct
     NASFrequencyLteCellInfo         *pCellInfo;
     gint8                           iTotalNoofCellInfo;
     guint8                          bCellInfoRequestInProgress;
+    guint                           cellInfoTimerId;
 
 } ContextNASInfo;
 
 typedef struct {
     ContextNASInfo *nasCtx;
-    int elapsed; // seconds
-    int interval_sec;     // current retry interval
     gboolean validInfoObtained; // flag to switch interval
 } CellInfoRetryData;
 
@@ -1417,16 +1416,17 @@ CLEANUP:
 static gboolean qmi_retry_cell_info_cb(gpointer user_data)
 {
     CellInfoRetryData *retryData = (CellInfoRetryData *)user_data;
-
-    CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Callback triggered, elapsed=%d seconds\n", __FUNCTION__, retryData->elapsed);
-
     ContextNASInfo *nasCtx = retryData->nasCtx;
+
+    CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Callback triggered\n", __FUNCTION__);
 
     if (nasCtx->bIsValidNASClient && nasCtx->nasClient &&
         !nasCtx->bCellInfoRequestInProgress)
     {
         CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Sending QMI cell location info request\n", __FUNCTION__);
-        nasCtx->bCellInfoRequestInProgress = true;
+
+        // mark flag
+	nasCtx->bCellInfoRequestInProgress = true;
 
         qmi_client_nas_get_cell_location_info(
             QMI_CLIENT_NAS(nasCtx->nasClient),
@@ -1437,26 +1437,25 @@ static gboolean qmi_retry_cell_info_cb(gpointer user_data)
             nasCtx
         );
     }
-    else
-    {
-        if (!nasCtx->bIsValidNASClient || !nasCtx->nasClient) {
-            CELLULAR_HAL_DBG_PRINT("[Cell Info] %s NAS client not ready\n", __FUNCTION__);
-        } else {
-            CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Previous request still in progress\n", __FUNCTION__);
-        }
-    }
-
-    retryData->elapsed += retryData->interval_sec;
 
     // Check if valid cell info obtained
     if ( (!retryData->validInfoObtained) && (nasCtx->pCellInfo != NULL) &&
          (nasCtx->iTotalNoofCellInfo > 0) )
     {
-        // Switch to longer interval for periodic updates
-        retryData->interval_sec = CELL_INFO_PERIODIC_RETRY_INTERVAL_SEC;
-        retryData->elapsed = 0;
-        retryData->validInfoObtained = TRUE;
         CELLULAR_HAL_DBG_PRINT("[Cell Info] %s Valid cell info found, switching to peirodic fetch interval\n", __FUNCTION__);
+        
+	// Mark flag
+	retryData->validInfoObtained = TRUE;
+
+	// Stop bootup retry timer
+        if (nasCtx->cellInfoTimerId) {
+            g_source_destroy(g_main_context_find_source_by_id(g_main_context_default(), nasCtx->cellInfoTimerId));
+        }
+
+        // Switch to longer interval for periodic updates
+        nasCtx->cellInfoTimerId = g_timeout_add_seconds(CELL_INFO_PERIODIC_RETRY_INTERVAL_SEC, qmi_retry_cell_info_cb, retryData);
+
+	return FALSE; // stop current timer
     }
 
     return TRUE;
@@ -1468,13 +1467,10 @@ static void qmi_start_cell_info_retry_timer(ContextNASInfo *nasCtx)
 
     CellInfoRetryData *data = g_new0(CellInfoRetryData, 1);
     data->nasCtx = nasCtx;
-    data->elapsed = 0;
-    data->interval_sec = CELL_INFO_RETRY_INTERVAL_SEC; // 30 sec boot interval
     data->validInfoObtained = FALSE;
 
-    g_timeout_add_seconds(data->interval_sec,
-                          qmi_retry_cell_info_cb,
-                          data);
+    // start timer
+    nasCtx->cellInfoTimerId = g_timeout_add_seconds(CELL_INFO_RETRY_INTERVAL_SEC, qmi_retry_cell_info_cb, data);
 }
 
 static void cellular_hal_qmi_get_modem_identification (QmiClientDms *dmsClient,
