@@ -1804,7 +1804,7 @@ int cellular_hal_modem_reset( void );
 * @retval RETURN_ERR if any error is detected
 *
 */
-int cellular_hal_modem_reset( void );
+int cellular_hal_get_cell_info(CellularCellInfo *cell_info, unsigned int *total_cell_count);
 
 
 /** @} */  //END OF GROUP CELLULAR_HAL_APIS
