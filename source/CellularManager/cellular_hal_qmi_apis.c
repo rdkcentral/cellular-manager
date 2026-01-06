@@ -504,8 +504,13 @@ static void cellular_hal_qmi_get_profile_list_cb (QmiClientWds *wdsClient,
                                                      GAsyncResult *result,
                                                      gpointer  user_data);
 
-static void cellular_qmi_get_cell_location_info_bootup_cb(QmiClientNas *nasClient, GAsyncResult *result, gpointer user_data);
-static void cellular_qmi_get_cell_location_info_hal_cb(QmiClientNas *nasClient, GAsyncResult *result, gpointer user_data);
+static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
+                                                GAsyncResult *result,
+                                                gpointer user_data);
+
+static void cellular_hal_qmi_get_cell_location_info_cb(QmiClientNas *nasClient,
+                                                       GAsyncResult *result,
+                                                       gpointer user_data);
 
 /**********************************************************************
                 FUNCTION DEFINITION
@@ -1190,22 +1195,17 @@ int cellular_hal_qmi_get_cell_information(CellularCellInfo *pCell_info, unsigned
         return RETURN_ERROR;
     }
 
-    // set flag
+    // Set flag
     nasCtx->bIsCellInfoCollectionDone = false;
 
-    if (!qmi_client_nas_get_cell_location_info(
-            QMI_CLIENT_NAS(nasCtx->nasClient),
-            NULL,
-            10,
-            NULL,
-            cellular_qmi_get_cell_location_info_hal_cb,
-            nasCtx))
-    {
-        CELLULAR_HAL_DBG_PRINT("[Cell Info] %s: QMI request submission failed\n", __FUNCTION__);
-        nasCtx->bIsCellInfoCollectionDone = true;
-        return RETURN_ERROR;
-    }
+    qmi_client_nas_get_cell_location_info(QMI_CLIENT_NAS(nasCtx->nasClient),
+                                          NULL,
+                                          10,
+                                          NULL,
+                                          (GAsyncReadyCallback)cellular_hal_qmi_get_cell_location_info_cb,
+                                          nasCtx);
 
+    // Timed wait for async qmi call to return
     unsigned int waited = 0;
     while (!nasCtx->bIsCellInfoCollectionDone && (waited < CELL_INFO_MAX_WAIT_SEC)) 
     {
@@ -1411,7 +1411,9 @@ CLEANUP:
     if (pInterFreq) g_array_free(pInterFreq, TRUE);
 }
 
-static void cellular_qmi_get_cell_location_info_bootup_cb(QmiClientNas *nasClient, GAsyncResult *result, gpointer user_data)
+static void cellular_qmi_get_cell_location_info(QmiClientNas *nasClient,
+                                                GAsyncResult *result,
+                                                gpointer user_data)
 {
     GTask *task = (GTask *)user_data;
     ContextDeviceOpen *pDeviceOpenCtx = g_task_get_task_data(task);
@@ -1429,11 +1431,14 @@ static void cellular_qmi_get_cell_location_info_bootup_cb(QmiClientNas *nasClien
         g_clear_error(&error);
     }
 
+    // Progress state machine to next step
     pDeviceOpenCtx->uiCurrentStep++;
     cellular_hal_qmi_device_open_step(task);
 }
 
-static void cellular_qmi_get_cell_location_info_hal_cb(QmiClientNas *nasClient, GAsyncResult *result, gpointer user_data)
+static void cellular_hal_qmi_get_cell_location_info_cb(QmiClientNas *nasClient,
+                                                       GAsyncResult *result,
+                                                       gpointer user_data)
 {
     ContextNASInfo *nasCtx = (ContextNASInfo *)user_data;
     GError *error = NULL;
@@ -2066,7 +2071,7 @@ static void cellular_hal_qmi_device_open_step( GTask *task )
                                                   NULL,
                                                   10,
                                                   NULL,
-                                                  (GAsyncReadyCallback)cellular_qmi_get_cell_location_info_bootup_cb,
+                                                  (GAsyncReadyCallback)cellular_qmi_get_cell_location_info,
                                                   task);
 
             return;

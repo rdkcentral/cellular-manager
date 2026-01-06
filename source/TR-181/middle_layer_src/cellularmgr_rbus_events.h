@@ -132,6 +132,7 @@ int CellularMgr_RBUS_Events_PublishLinkAvailableStatus( unsigned char bPrevLinkS
 int CellularMgr_RBUS_Events_PublishPhyConnectionStatus( unsigned char bPrevPhyState, unsigned char bCurrentPhyState );
 int CellularMgr_RBUS_Events_Publish_X_RDK_Enable( unsigned char bPreviousValue, unsigned char bCurrentValue );
 int CellularMgr_RBUS_Events_PublishInterfaceStatus( CellularInterfaceStatus_t PrevState, CellularInterfaceStatus_t CurrentState );
+int CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo( CellularCellInfo *pPrevCellInfo, int prevCellCnt, CellularCellInfo *pCurrentCellInfo, int currentCellCnt );
 rbusError_t CellularMgrDmlSubscriptionHandler(rbusHandle_t handle, rbusEventSubAction_t action, const char* eventName, rbusFilter_t filter, int32_t interval, bool* autoPublish);
 rbusError_t CellularMgr_Device_Mode_RBUS_Events_Handler(rbusHandle_t handle, rbusEvent_t const* event, rbusEventSubscription_t* subscription);
 void* CellularMgr_Device_Mode_RBUS_Handler_Subscribe();

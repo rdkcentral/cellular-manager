@@ -1792,5 +1792,20 @@ int cellular_hal_modem_factory_reset( void );
 */
 int cellular_hal_modem_reset( void );
 
+/* cellular_hal_get_cell_info function */
+/**
+* @description - This API to fetch cell information for serving and neighboring cells
+*
+* @param[IN] cell_info: Allocated memory to which cell information from hal is copied
+* @param[IN] total_cell_count: Allocated memory that holds total number of cells 
+*
+* @return The status of the operation
+* @retval RETURN_OK if successful
+* @retval RETURN_ERR if any error is detected
+*
+*/
+int cellular_hal_modem_reset( void );
+
+
 /** @} */  //END OF GROUP CELLULAR_HAL_APIS
 #endif //_CELLULAR_HAL_H_
