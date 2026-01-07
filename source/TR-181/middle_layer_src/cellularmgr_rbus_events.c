@@ -154,7 +154,7 @@ int CellularMgr_RBUS_Events_PublishLinkAvailableStatus( unsigned char bPrevLinkS
     return RETURN_OK;
 }
 
-int CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo(CellularCellInfo *pPrevCellInfo, int prevCellCnt, CellularCellInfo *pCurrentCellInfo, int currentCellCnt) 
+int CellularMgr_RBUS_Events_Publish_X_RDK_CellInfo( CellularCellInfo *pPrevCellInfo, int prevCellCnt, CellularCellInfo *pCurrentCellInfo, int currentCellCnt ) 
 {
     CcspTraceInfo(("%s-%d: Publish CellInfo: subscribed flag:%d \n",__FUNCTION__, __LINE__, gRBUSSubListSt.stCellLocation.CellInfoSubFlag))
     if (gRBUSSubListSt.stCellLocation.CellInfoSubFlag)
