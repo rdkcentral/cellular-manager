@@ -31,8 +31,8 @@ RdkCellularManager_gtest_bin_CPPFLAGS = -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/glib-2.0 \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)/usr/include/glib-2.0 \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(libdir)/glib-2.0/include \
+                                        -I/usr/include/libqmi-glib \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/libqmi-glib \
-                                        -I$(PKG_CONFIG_SYSROOT_DIR)/usr/include/libqmi-glib \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/dbus-1.0 \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(libdir)/dbus-1.0/include \
                                         -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/libsafec \
@@ -47,7 +47,7 @@ RdkCellularManager_gtest_bin_CPPFLAGS = -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)
                                         -I$(top_srcdir)/../CcspCommonLibrary/source/cosa/include/ \
                                         -I$(top_srcdir)/../CcspCommonLibrary/source/ccsp/components/include/ \
                                         -I${top_srcdir}/source/TR-181/middle_layer_src \
-                                        -DUNIT_TEST_DOCKER_SUPPORT
+                                        -DUNIT_TEST_DOCKER_SUPPORT 
 
 RdkCellularManager_gtest_bin_SOURCES =  ../CellularManager/cellularmgr_sm.c \
                                         ../CellularManager/cellularmgr_bus_utils.c \
