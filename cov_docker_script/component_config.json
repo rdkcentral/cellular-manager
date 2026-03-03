@@ -89,6 +89,14 @@
         "header_paths":[
           { "source": "source", "destination": "$HOME/usr/include/rdkb" }
         ]
+      },
+      {
+        "name": "rdkb-halif-cellular-modem",
+        "repo": "https://github.com/rdkcentral/rdkb-halif-cellular-modem.git",
+        "branch": "main",
+        "header_paths": [
+          { "source": "include", "destination": "$HOME/usr/include/rdkb" }
+        ]
       }
     ]
   },
