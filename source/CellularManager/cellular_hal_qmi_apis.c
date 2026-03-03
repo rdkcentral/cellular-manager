@@ -5645,10 +5645,12 @@ static void cellular_hal_qmi_profile_operation_step( GTask *task )
     QMIContextStructPrivate    *pstQMIContext   = NULL;
     ContextProfileOperation    *pProfileCrCtx = NULL;
     ContextWDSInfo             *wdsCtx          = NULL;
+    CellularProfileStruct      *pstDefProfFromModem = NULL;
 
-    pProfileCrCtx     = g_task_get_task_data (task);
-    pstQMIContext     = (QMIContextStructPrivate*)pProfileCrCtx->vpPrivateData;
-    wdsCtx            = &(pstQMIContext->wdsCtx);
+    pProfileCrCtx       = g_task_get_task_data (task);
+    pstQMIContext       = (QMIContextStructPrivate*)pProfileCrCtx->vpPrivateData;
+    wdsCtx              = &(pstQMIContext->wdsCtx);
+    pstDefProfFromModem	= &(wdsCtx->stDefaultProfileFromModem);
 
     CELLULAR_HAL_DBG_PRINT("%s %d - Starting WDS Profile Operation Step\n", __FUNCTION__, __LINE__);
     switch ( pProfileCrCtx->uiCurrentStep ) 
@@ -5803,6 +5805,12 @@ static void cellular_hal_qmi_profile_operation_step( GTask *task )
                     if ( NULL != pstInputProfile )
                     {
                         int i;
+
+                        if ((pstInputProfile->APN[0] == '\0') && (pstDefProfFromModem != NULL)) {
+                            CELLULAR_HAL_DBG_PRINT("%s %d - Incoming profile has invalid APN. Fallback to modem default profile\n", __FUNCTION__, __LINE__);
+                            memset(pstInputProfile, 0, sizeof(CellularProfileStruct));
+                            memcpy(pstInputProfile, pstDefProfFromModem, sizeof(CellularProfileStruct));
+                        }
 
                         for( i = 0; i < wdsCtx->ui8ProfileCount; i++ )
                         {
