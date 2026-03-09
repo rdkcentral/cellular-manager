@@ -391,7 +391,7 @@ int CellularMgrIPReadyCBForSM( CellularIPStruct *pstIPStruct, CellularDeviceIPRe
 
 int CellularMgrGetCurrentPDPContextStatusInformation( PCELLULAR_INTERFACE_CONTEXTPROFILE_INFO  pstContextProfileInfo )
 {
-    printf("%s - Testing coverity flow\n");
+    CcspTraceError(("%s - Test coverity flow\n"));
     if( NULL == pstContextProfileInfo )
     {
         CcspTraceError(("%s - Failed to get context information because of invalid argument\n",__FUNCTION__));
