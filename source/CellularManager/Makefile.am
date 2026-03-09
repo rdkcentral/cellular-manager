@@ -18,12 +18,12 @@
 #############################################################################
 
 AM_CFLAGS = -D_ANSC_LINUX
-AM_CFLAGS += -D_ANSC_USER -Wno-format=error
+AM_CFLAGS += -D_ANSC_USER -Wno-format
 AM_LDFLAGS = -lccsp_common
 AM_LDFLAGS +=
 
 AM_LDFLAGS += -lulog
-AM_CPPFLAGS = -Wall -Wno-format=error
+AM_CPPFLAGS = -Wall -Wno-format
 ACLOCAL_AMFLAGS = -I m4
 hardware_platform = i686-linux-gnu
 if CELLULAR_MGR_LITE
