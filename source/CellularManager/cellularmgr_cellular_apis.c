@@ -105,6 +105,106 @@ extern PBACKEND_MANAGER_OBJECT               g_pBEManager;
 
 #ifndef CELLULAR_MGR_LITE
 
+// Coverity Issue 1: Resource leak - file handle not closed on error path
+STATIC int coverity_test_resource_leak(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        return -1;
+    }
+    
+    char buffer[256];
+    if (fread(buffer, 1, 256, file) < 0) {
+        // COVERITY ISSUE: File handle leaked here - missing fclose(file)
+        return -1;
+    }
+    
+    fclose(file);
+    return 0;
+}
+
+// Coverity Issue 2: Null pointer dereference
+STATIC void coverity_test_null_deref(const char *input)
+{
+    char *ptr = NULL;
+    
+    if (input && strlen(input) > 10) {
+        ptr = (char *)malloc(100);
+    }
+    
+    // COVERITY ISSUE: ptr could be NULL here if strlen(input) <= 10
+    strcpy(ptr, "test data");
+    free(ptr);
+}
+
+// Coverity Issue 3: Buffer overflow
+STATIC void coverity_test_buffer_overflow(const char *user_input)
+{
+    char fixed_buffer[32];
+    
+    // COVERITY ISSUE: No bounds checking - user_input could overflow fixed_buffer
+    strcpy(fixed_buffer, user_input);
+    
+    printf("Buffer contents: %s\n", fixed_buffer);
+}
+
+// Coverity Issue 4: Use after free
+STATIC void coverity_test_use_after_free(void)
+{
+    char *data = (char *)malloc(128);
+    if (data) {
+        strcpy(data, "test");
+        free(data);
+        
+        // COVERITY ISSUE: Using memory after it's been freed
+        printf("Data: %s\n", data);
+    }
+}
+
+// Coverity Issue 5: Uninitialized variable
+STATIC int coverity_test_uninit_var(int condition)
+{
+    int result;
+    
+    if (condition > 10) {
+        result = 100;
+    }
+    
+    // COVERITY ISSUE: result may be uninitialized if condition <= 10
+    return result * 2;
+}
+
+// Coverity Issue 6: Memory leak in error path
+STATIC int coverity_test_memory_leak(const char *input)
+{
+    char *buffer1 = (char *)malloc(256);
+    char *buffer2 = (char *)malloc(256);
+    
+    if (!buffer1 || !buffer2) {
+        // COVERITY ISSUE: If buffer1 succeeded but buffer2 failed, buffer1 leaks
+        return -1;
+    }
+    
+    strcpy(buffer1, input);
+    strcpy(buffer2, input);
+    
+    free(buffer1);
+    free(buffer2);
+    return 0;
+}
+
+// Coverity Issue 7: Double free
+STATIC void coverity_test_double_free(void)
+{
+    char *ptr = (char *)malloc(64);
+    if (ptr) {
+        strcpy(ptr, "data");
+        free(ptr);
+        // COVERITY ISSUE: Double free
+        free(ptr);
+    }
+}
+
 // Function to read the entire file into a string
 STATIC char *read_file(const char *filename)
 {
