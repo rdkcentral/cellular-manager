@@ -117,7 +117,7 @@ graph TB
     H[Watchdog] -.->|Health Check| B
 ```
 
-## Quick Start
+## Build (Detailed)
 
 ### Prerequisites
 
