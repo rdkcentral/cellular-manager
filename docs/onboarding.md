@@ -85,7 +85,7 @@ Use this scenario:
 
 Then run the formal triage workflow:
 
-- [../docs/troubleshooting.md](troubleshooting.md)
+- [troubleshooting.md](troubleshooting.md)
 
 ## What Good Looks Like
 
