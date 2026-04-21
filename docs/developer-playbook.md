@@ -199,8 +199,7 @@ done
 Local test assets:
 
 - `source/test/` (gtest/gmock suites)
-- `test/run_ut.sh`
-- `test/run_l2.sh`
+- `source/test/run_ut.sh`
 
 Recommended smoke before merge:
 
