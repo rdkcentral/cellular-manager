@@ -187,13 +187,18 @@ https://github.com/rdkcentral/docker-device-mgt-service-test
 
 ```
 cellular-manager/
-├── source/                   # Source code
+├── source/                  # Source code
 │   ├── CellularManager/     # Main daemon + HAL
 │   ├── TR-181/              # Data model plugin
 │   └── test/                # Unit tests (gtest/gmock)
-├── config/                   # Runtime configuration
+├── config/                  # Runtime configuration
 ├── systemd_units/           # Service definitions
-└── .github/                 # Agentic AI framework (this directory)
+└── .github/                 # Repository guidance and automation
+    ├── README.md            # This guide
+    ├── instructions/        # File-scoped coding instructions
+    ├── workflows/           # CI workflow definitions
+    └── knowledge/
+        └── reference-data.md # Existing knowledge base reference
 ```
 
 ## Primary Workflows Supported
