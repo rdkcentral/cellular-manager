@@ -42,7 +42,7 @@ Read startup of `CellularManagerLog.txt.0` (first ~50 lines):
 | `Failed to send IP info to WanManager` | WAN propagation failure |
 | `sm controller object is empty` | Context lifecycle issue |
 
-Thread roles: Main (init, bus, signals), SM (modem lifecycle), QMI indication (async events), Watchdog (health check)
+Thread roles: Main (init, bus, signals), SM (modem lifecycle), QMI indication (async events). Treat watchdog/recovery activity as external supervision and correlate it via `SelfHeal*.txt.0` and system logs rather than an in-process Cellular Manager thread.
 
 ## Step 3: Identify Anomaly Window
 
