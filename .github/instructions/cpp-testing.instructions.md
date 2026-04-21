@@ -178,8 +178,8 @@ EXPECT_EQ(CELLULAR_STATE_REGISTERED, pCtx->state)
 
 ### Build Tests
 ```bash
-./configure --enable-gtest
-make check
+make -C source/test
+./source/test/RdkCellularManager_gtest.bin
 ```
 
 ### Memory Checking
