@@ -6,7 +6,7 @@ This guide gets a new engineer from zero context to productive debugging in 30 m
 
 By the end, you should be able to:
 
-1. Explain the 6-state cellular lifecycle (DOWN → DEACTIVATED → DEREGISTERED → REGISTERED → CONNECTED, plus ERROR).
+1. Explain the 6-state cellular lifecycle (DOWN → DEACTIVATED → DEREGISTERED → REGISTERED → CONNECTED → ERROR).
 2. Find the code path for any major modem event.
 3. Run first-line diagnostics for field issues.
 4. Triage a registration or data-session failure with evidence.
