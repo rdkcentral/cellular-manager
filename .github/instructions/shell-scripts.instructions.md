@@ -159,8 +159,9 @@ for file in $FILES; do  # Word splitting!
 # GOOD: Quoted
 for file in "$FILES"; do
 
-# BAD: Parsing ls output
-for file in $(ls *.log); do
+# GOOD: Iterate over positional parameters safely
+set -- *.log
+for file in "$@"; do
 
 # GOOD: Use glob
 for file in *.log; do
