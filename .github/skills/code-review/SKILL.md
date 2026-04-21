@@ -206,7 +206,5 @@ Load project-specific context:
 ## Related Skills
 
 - **quality-checker**: Run comprehensive quality checks
-- **memory-safety-analyzer**: Deep dive on memory issues
-- **thread-safety-analyzer**: Deep dive on concurrency
-- **platform-portability-checker**: Validate cross-platform code
-- **triage-logs**: Correlate field logs with code changes
+- **safety-analyzer**: Deep dive on memory, thread-safety, and other safety issues
+- **incident-analysis**: Correlate observed failures and incidents with code changes
