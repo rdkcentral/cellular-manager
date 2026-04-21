@@ -18,7 +18,7 @@ applyTo: "**/*.c,**/*.h"
 char* response = malloc(QMI_RESPONSE_MAX);
 if (!response) {
     CcspTraceError(("Failed to allocate %d bytes for QMI response\n", QMI_RESPONSE_MAX));
-    return RETURN_ERR;
+    return RETURN_ERROR;
 }
 // ... use response ...
 free(response);
@@ -43,13 +43,13 @@ int cellular_hal_init(CellularContextStruct* pCtx) {
 
     apn_config = malloc(APN_MAX_LEN);
     if (!apn_config) {
-        ret = RETURN_ERR;
+        ret = RETURN_ERROR;
         goto cleanup;
     }
 
     qmi_handle = qmi_client_open(pCtx->device_path);
     if (!qmi_handle) {
-        ret = RETURN_ERR;
+        ret = RETURN_ERROR;
         goto cleanup;
     }
 
@@ -118,7 +118,7 @@ long timestamp;    // 32 or 64 bits?
 ## Error Handling
 
 ### Return Value Convention
-- Return 0/RETURN_OK for success, negative/RETURN_ERR for errors
+- Return 0/RETURN_OK for success, negative/RETURN_ERROR for errors
 - Preserve modem error causes — never mask them with generic codes
 - Define error codes in header files
 
@@ -128,12 +128,12 @@ int handle_registration_reject(uint32_t nas_cause) {
     CcspTraceWarning(("Registration rejected: NAS cause=%u (%s)\n",
                        nas_cause, nas_cause_to_string(nas_cause)));
     pCtx->last_reject_cause = nas_cause;
-    return RETURN_ERR;
+    return RETURN_ERROR;
 }
 
 // BAD: Masking the error cause
 if (ret != SUCCESS) {
-    return RETURN_ERR;  // Lost the modem-specific reason!
+    return RETURN_ERROR;  // Lost the modem-specific reason!
 }
 ```
 
@@ -168,7 +168,7 @@ int ret = pthread_create(&thread, &attr, modem_event_thread, pCtx);
 if (ret != 0) {
     CcspTraceError(("Failed to create modem event thread: %s\n", strerror(ret)));
     pthread_attr_destroy(&attr);
-    return RETURN_ERR;
+    return RETURN_ERROR;
 }
 pthread_attr_destroy(&attr);
 
@@ -194,7 +194,7 @@ ts.tv_sec += 5;
 int ret = pthread_mutex_timedlock(&g_modem_mutex, &ts);
 if (ret == ETIMEDOUT) {
     CcspTraceError(("Modem mutex lock timeout — potential deadlock\n"));
-    return RETURN_ERR;
+    return RETURN_ERROR;
 }
 ```
 
@@ -232,7 +232,7 @@ bool should_shutdown(CellularAtomics* a) {
 #define QMI_RETRY_BASE_MS 500
 
 int qmi_send_with_retry(qmi_handle_t h, qmi_msg_t* msg) {
-    int ret = RETURN_ERR;
+    int ret = RETURN_ERROR;
     for (int attempt = 0; attempt < MAX_QMI_RETRIES; attempt++) {
         ret = qmi_send(h, msg, QMI_TIMEOUT_MS);
         if (ret == RETURN_OK) break;
