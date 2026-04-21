@@ -1,6 +1,6 @@
 # Cellular Manager
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../LICENSE)
 [![C](https://img.shields.io/badge/Language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
 [![Platform](https://img.shields.io/badge/Platform-Embedded%20Linux-orange.svg)](https://www.yoctoproject.org/)
 
@@ -60,18 +60,18 @@ source/test/run_ut.sh
 
 ## Documentation
 
-See [docs/README.md](docs/README.md) for the full documentation index:
+See [docs/README.md](../docs/README.md) for the full documentation index:
 
 | Document | Content |
 |----------|---------|
-| [Architecture](docs/architecture.md) | System design, state machine, threading, dependencies |
-| [Workflows](docs/workflows.md) | Modem bring-up, registration, data session flows |
-| [Troubleshooting](docs/troubleshooting.md) | Decision trees, log signatures, RCA workflow |
-| [Developer Playbook](docs/developer-playbook.md) | Shell commands for debugging and validation |
-| [Getting Started](docs/onboarding.md) | 30-minute onboarding for new engineers |
-| [HAL API](docs/reference/hal-api.md) | HAL function signatures and contracts |
-| [Callbacks](docs/reference/callbacks.md) | Callback families, ordering, side effects |
-| [TR-181 Matrix](docs/reference/tr181-matrix.md) | Parameter-to-code ownership map |
+| [Architecture](../docs/architecture.md) | System design, state machine, threading, dependencies |
+| [Workflows](../docs/workflows.md) | Modem bring-up, registration, data session flows |
+| [Troubleshooting](../docs/troubleshooting.md) | Decision trees, log signatures, RCA workflow |
+| [Developer Playbook](../docs/developer-playbook.md) | Shell commands for debugging and validation |
+| [Getting Started](../docs/onboarding.md) | 30-minute onboarding for new engineers |
+| [HAL API](../docs/reference/hal-api.md) | HAL function signatures and contracts |
+| [Callbacks](../docs/reference/callbacks.md) | Callback families, ordering, side effects |
+| [TR-181 Matrix](../docs/reference/tr181-matrix.md) | Parameter-to-code ownership map |
 
 ## Project Structure
 
@@ -99,11 +99,11 @@ cellular-manager/
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE).
+Apache License 2.0 — see [LICENSE](../LICENSE).
 ### Architecture Highlights
 
 ```mermaid
