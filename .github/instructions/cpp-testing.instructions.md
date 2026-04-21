@@ -76,7 +76,7 @@ protected:
 
 TEST_F(CellularHalTest, InitReturnsErrorOnNullContext) {
     int result = cellular_hal_init(NULL);
-    EXPECT_EQ(RETURN_ERR, result);
+    EXPECT_EQ(RETURN_ERROR, result);
 }
 ```
 
