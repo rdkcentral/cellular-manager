@@ -185,7 +185,7 @@ make check
 ### Memory Checking
 ```bash
 valgrind --leak-check=full --show-leak-kinds=all \
-         ./source/test/cellularmgr_gtest
+         ./source/test/RdkCellularManager_gtest.bin
 ```
 
 ### Test Output
