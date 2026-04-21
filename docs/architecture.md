@@ -40,13 +40,13 @@ Cellular Manager is an RDK daemon (`cellularmanager`) managing the full lifecycl
 
 | Component | Files | Purpose |
 |-----------|-------|---------|
-| **Process Bootstrap (SSP)** | `cellularmgr_main.c`, `cellularmgr_ssp_action.c` | Daemonize, signal handling, CCSP bus init, component registration |
-| **State Machine** | `cellularmgr_sm.c/h` | Policy-driven lifecycle: DOWN→DEACTIVATED→DEREGISTERED→REGISTERED→CONNECTED |
-| **HAL Abstraction** | `cellular_hal.c/h` | Thin dispatch; `#ifdef QMI_SUPPORT` forwards to QMI backend |
-| **QMI Backend** | `cellular_hal_qmi_apis.c/h` | libqmi-glib over `/dev/cdc-wdm0` — DMS/NAS/WDS/UIM services |
-| **DML / TR-181** | `cellularmgr_cellular_apis.c/h`, `cellularmgr_cellular_internal.c/h`, `TR-181/middle_layer_src/*` | `Device.Cellular.*` object lifecycle and get/set APIs |
-| **Bus & WAN Utils** | `cellularmgr_bus_utils.c/h` | CCSP bus wrappers, WAN Manager parameter propagation, sysevent |
-| **RBUS Events** | `cellularmgr_rbus_events.c/h` (TR-181 layer) | Periodic signal/cell/status publication (`RBUS_BUILD_FLAG_ENABLE`) |
+| **Process Bootstrap (SSP)** | `source/CellularManager/cellularmgr_main.c`, `source/CellularManager/cellularmgr_ssp_action.c` | Daemonize, signal handling, CCSP bus init, component registration |
+| **State Machine** | `source/CellularManager/cellularmgr_sm.c/h` | Policy-driven lifecycle: DOWN→DEACTIVATED→DEREGISTERED→REGISTERED→CONNECTED |
+| **HAL Abstraction** | `source/CellularManager/cellular_hal.c/h` | Thin dispatch; `#ifdef QMI_SUPPORT` forwards to QMI backend |
+| **QMI Backend** | `source/CellularManager/cellular_hal_qmi_apis.c/h` | libqmi-glib over `/dev/cdc-wdm0` — DMS/NAS/WDS/UIM services |
+| **DML / TR-181** | `source/CellularManager/cellularmgr_cellular_apis.c/h`, `source/CellularManager/cellularmgr_cellular_internal.c/h`, `source/TR-181/middle_layer_src/*` | `Device.Cellular.*` object lifecycle and get/set APIs |
+| **Bus & WAN Utils** | `source/CellularManager/cellularmgr_bus_utils.c/h` | CCSP bus wrappers, WAN Manager parameter propagation, sysevent |
+| **RBUS Events** | `source/CellularManager/cellularmgr_rbus_events.c/h` (TR-181 layer) | Periodic signal/cell/status publication (`RBUS_BUILD_FLAG_ENABLE`) |
 
 ## 3. Initialization Sequence
 

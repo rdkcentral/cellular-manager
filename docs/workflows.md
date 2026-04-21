@@ -2,10 +2,10 @@
 
 This document describes implemented runtime workflows derived from the current source code paths in:
 
-- `cellularmgr_sm.c`
-- `cellularmgr_cellular_apis.c`
-- `cellular_hal.c`
-- `cellular_hal_qmi_apis.c`
+- `source/CellularManager/cellularmgr_sm.c`
+- `source/CellularManager/cellularmgr_cellular_apis.c`
+- `source/CellularManager/cellular_hal.c`
+- `source/CellularManager/cellular_hal_qmi_apis.c`
 
 See [architecture.md](architecture.md) for system design and state machine detail.
 
