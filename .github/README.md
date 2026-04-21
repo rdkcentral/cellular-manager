@@ -163,38 +163,18 @@ https://github.com/rdkcentral/docker-device-mgt-service-test
 
 ### Agents
 
-- **[Embedded C Expert](agents/embedded-c-expert.agent.md)** — Modem C development specialist
-- **[Embedded C Expert](agents/embedded-c-expert.agent.md)** — Modem C development specialist
-- **[Legacy Refactor Specialist](agents/legacy-refactor-specialist.agent.md)** — Safe legacy code cleanup
-- **[Cellular Manager Agent](agents/cellular-manager-agent.md)** — Comprehensive AI agent for debugging, triage, RCA, and development
+- **[Cellular Manager Agent](agents/cellular-manager.agent.md)** — Comprehensive AI agent for debugging, triage, RCA, and development
 
 ### Skills
 
 - **[Code Review](skills/code-review/SKILL.md)** — PR analysis with regression risk scoring
-- **[Triage Logs](skills/triage-logs/SKILL.md)** — Device log correlation and RCA
-- **[Incident RCA](skills/incident-rca/SKILL.md)** — Confidence-scored RCA with hypothesis/disproof workflow
-- **[Memory Safety Analyzer](skills/memory-safety-analyzer/SKILL.md)** — Leak and lifetime analysis
-- **[Thread Safety Analyzer](skills/thread-safety-analyzer/SKILL.md)** — Race and deadlock detection
-- **[Platform Portability Checker](skills/platform-portability-checker/SKILL.md)** — Cross-platform verification
+- **[Incident Analysis](skills/incident-analysis/SKILL.md)** — Confidence-scored RCA with hypothesis/disproof workflow
 - **[Quality Checker](skills/quality-checker/SKILL.md)** — Container-based quality gate
-- **[Technical Documentation Writer](skills/technical-documentation-writer/SKILL.md)** — Consistent doc generation
+- **[Safety Analyzer](skills/safety-analyzer/SKILL.md)** — Memory, thread-safety, and platform portability analysis
 
 ### Knowledge Base
 
-- **[Signal Metrics & Error Codes](knowledge/signal-metrics-error-codes.md)** — Enums, thresholds, timeouts, build flags, log signatures
-- **[Failure Patterns](knowledge/failure-patterns.md)** — Known failure modes, state machine stuck patterns, thread safety, memory patterns
-
-### Prompt Templates
-
-- **[Debugging Session](prompts/debugging-session.prompt.md)** — Structured interactive debugging workflow
-- **[Root Cause Analysis](prompts/root-cause-analysis.prompt.md)** — Formal RCA with hypothesis scoring and disproof
-- **[Incident Triage Prompt](prompts/incident-triage.prompt.md)** — Structured incident diagnosis output
-- **[New Feature Design Prompt](prompts/new-feature-design.prompt.md)** — Design-first change proposals with safety and test impact
-
-### Playbooks
-
-- **[Issue Triage Playbook](playbooks/issue-triage-playbook.md)** — First-responder triage with state-based diagnosis
-- **[Recovery Workflows](playbooks/recovery-workflows.md)** — Step-by-step recovery for common failure scenarios
+- **[Reference Data](knowledge/reference-data.md)** — Enums, thresholds, timeouts, build flags, log signatures, and failure patterns
 
 ### Instructions (File-Scoped)
 
