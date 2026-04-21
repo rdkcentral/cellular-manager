@@ -83,12 +83,11 @@ docker exec -i native-platform /bin/bash -c "
 ```bash
 docker exec -i native-platform /bin/bash -c "
   cd /mnt/workspace && \
-  autoreconf -fi && ./configure --enable-gtest && make -j\$(nproc) && \
-  find source/test -type f -executable -name '*test*' | while read test_bin; do
-    valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-             --xml=yes --xml-file=\"valgrind-\$(basename \$test_bin).xml\" \
-             \"\$test_bin\" 2>&1 | tee \"valgrind-\$(basename \$test_bin).log\"
-  done
+  autoreconf -fi && ./configure && make -j\$(nproc) && \
+  make -C source/test && \
+  valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+           --xml=yes --xml-file=valgrind-results.xml \
+           source/test/RdkCellularManager_gtest.bin 2>&1 | tee valgrind-results.log
 "
 ```
 
@@ -96,11 +95,10 @@ docker exec -i native-platform /bin/bash -c "
 ```bash
 docker exec -i native-platform /bin/bash -c "
   cd /mnt/workspace && \
-  find source/test -type f -executable -name '*test*' | while read test_bin; do
-    valgrind --tool=helgrind --track-lockorders=yes \
-             --xml=yes --xml-file=\"helgrind-\$(basename \$test_bin).xml\" \
-             \"\$test_bin\" 2>&1 | tee \"helgrind-\$(basename \$test_bin).log\"
-  done
+  make -C source/test && \
+  valgrind --tool=helgrind --track-lockorders=yes \
+           --xml=yes --xml-file=helgrind-results.xml \
+           source/test/RdkCellularManager_gtest.bin 2>&1 | tee helgrind-results.log
 "
 ```
 
@@ -109,7 +107,7 @@ docker exec -i native-platform /bin/bash -c "
 docker exec -i native-platform /bin/bash -c "
   cd /mnt/workspace && \
   autoreconf -fi && \
-  ./configure --enable-gtest CFLAGS='-Wall -Wextra -Werror' && \
+  ./configure CFLAGS='-Wall -Wextra -Werror' && \
   make -j\$(nproc)
 "
 ```
