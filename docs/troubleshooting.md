@@ -72,7 +72,8 @@ Is /dev/cdc-wdm0 present?
 ├─ NO
 │   ├─ Modem physically connected?
 │   │   ├─ NO → Connect hardware, check USB/PCIe
-│   │   └─ YES → lsusb, dmesg | grep -i qmi
+│   │   └─ YES → Run: lsusb
+│   │             and: dmesg | grep -i qmi
 │   │       ├─ No USB device → modprobe qmi_wwan
 │   │       └─ USB present, no /dev → Check udev rules, cdc-wdm driver
 │   └─ Was it previously present?
