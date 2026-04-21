@@ -222,7 +222,7 @@ cellular-manager/
 make check
 
 # Run under valgrind
-valgrind --leak-check=full ./source/test/cellularmgr_gtest
+valgrind --leak-check=full ./source/test/RdkCellularManager_gtest.bin
 ```
 
 ### CI Workflows
