@@ -109,11 +109,11 @@ qmi_register_indication(ctx->handle, on_indication);  // Fires immediately → d
 cppcheck --enable=all --inconclusive source/CellularManager/
 
 # Memory analysis
-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./source/test/cellularmgr_gtest
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./source/test/RdkCellularManager_gtest.bin
 
 # Thread analysis
 gcc -g -fsanitize=thread -O1 source/CellularManager/*.c -o cellularmgr -lpthread
-valgrind --tool=helgrind --track-lockorders=yes ./source/test/cellularmgr_gtest
+valgrind --tool=helgrind --track-lockorders=yes ./source/test/RdkCellularManager_gtest.bin
 
 # Cross-compilation
 ./configure --host=arm-linux-gnueabihf && make clean && make
