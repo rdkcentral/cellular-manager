@@ -41,7 +41,7 @@ strncpy(apn, config_apn, APN_MAX_LEN);  // Crash if NULL
 // Leak on error
 char* apn = strdup(ctx->apn_name);
 void* qmi = qmi_client_open(ctx->device);
-if (!qmi) return RETURN_ERR;  // Leaked apn!
+if (!qmi) return RETURN_ERROR;  // Leaked apn!
 
 // Use after free in callback
 free(pCtx->registration_info);
