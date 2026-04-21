@@ -19,9 +19,11 @@ Read in this order:
 2. [workflows.md](workflows.md)
 3. [reference/hal-api.md](reference/hal-api.md)
 
-Memorize state transitions:
+Memorize the normal bring-up progression:
 
 `DOWN -> DEACTIVATED -> DEREGISTERED -> REGISTERED -> CONNECTED`
+
+`ERROR` (`CELLULAR_STATUS_ERROR`) is a 6th terminal state reached only on fatal failure; it is not part of the normal bring-up path and causes the SM thread to exit.
 
 ## Minute 5-10: Map Files to Responsibilities
 

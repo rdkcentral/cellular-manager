@@ -32,7 +32,7 @@ docs/
 Cellular Manager (`cellularmanager`) manages LTE/4G/5G modem lifecycle on RDK embedded devices. Core state flow:
 
 ```
-DOWN → DEACTIVATED → DEREGISTERED → REGISTERED → CONNECTED
+DOWN → DEACTIVATED → DEREGISTERED → REGISTERED → CONNECTED (→ ERROR on fatal failure)
 ```
 
 Key source files: `cellularmgr_sm.c` (state machine), `cellular_hal.c` (HAL), `cellular_hal_qmi_apis.c` (QMI backend), `cellularmgr_bus_utils.c` (WAN integration).

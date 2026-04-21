@@ -10,7 +10,7 @@ Memory and thread safety patterns for code review reference.
 ```c
 // CORRECT
 CellularProfileStruct_t *p = malloc(sizeof(*p));
-if (p == NULL) { CcspTraceError(("malloc failed\n")); return RETURN_ERR; }
+if (p == NULL) { CcspTraceError(("malloc failed\n")); return RETURN_ERROR; }
 memset(p, 0, sizeof(*p));
 
 // WRONG — NULL dereference if malloc fails
@@ -22,7 +22,7 @@ p->ProfileID = id;
 ```c
 // CORRECT
 int Init(void) {
-    int ret = RETURN_ERR;
+    int ret = RETURN_ERROR;
     char *buf = NULL;
     int fd = -1;
     buf = malloc(SIZE);
@@ -39,7 +39,7 @@ cleanup:
 // WRONG — leak on error
 char *buf = malloc(SIZE);
 int fd = open(PATH, O_RDWR);
-if (fd < 0) return RETURN_ERR;  // buf leaked
+if (fd < 0) return RETURN_ERROR;  // buf leaked
 ```
 
 ### 3. Safe String Copy
@@ -57,7 +57,7 @@ free(p->data); p->data = NULL;  // CORRECT
 ### 5. Safe realloc
 ```c
 char *tmp = realloc(buf, newSize);       // CORRECT
-if (!tmp) return RETURN_ERR;             // buf still valid
+if (!tmp) return RETURN_ERROR;             // buf still valid
 buf = tmp;
 
 buf = realloc(buf, newSize);             // WRONG — original leaked if fails
@@ -65,7 +65,7 @@ buf = realloc(buf, newSize);             // WRONG — original leaked if fails
 
 ### 6. Array Bounds
 ```c
-if (idx < 0 || idx >= MAX) return RETURN_ERR;  // CORRECT
+if (idx < 0 || idx >= MAX) return RETURN_ERROR;  // CORRECT
 p = &array[idx];                                // Safe after check
 ```
 
@@ -121,7 +121,7 @@ pthread_mutex_unlock(&mtx);
 ### 4. Thread Creation
 ```c
 int rc = pthread_create(&tid, NULL, func, arg);  // CORRECT
-if (rc != 0) { CcspTraceError(("pthread_create failed\n")); return RETURN_ERR; }
+if (rc != 0) { CcspTraceError(("pthread_create failed\n")); return RETURN_ERROR; }
 pthread_detach(tid);
 
 pthread_create(&tid, NULL, func, arg);  // WRONG — return ignored
