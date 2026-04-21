@@ -43,7 +43,7 @@ docs/
 3. **Mermaid for diagrams** — Use mermaid code blocks for all diagrams
 4. **Tables for structured data** — Prefer tables over prose for enums, flags, mappings
 5. **Code blocks for commands** — Always use fenced code blocks with language tag
-6. **Cross-references** — Use relative paths: `[architecture](architecture.md)`
+6. **Cross-references** — Use paths relative to the current file. For example, from a file in `docs/` link with `[architecture](architecture.md)`, and from a file in `.github/` link with `[architecture](../docs/architecture.md)`.
 
 ### When to Update
 
