@@ -102,15 +102,15 @@ Map changed files to cellular-manager architectural modules:
 
 ### Step 4: Analyze Each Changed File
 
-For each file, apply domain-specific analysis using [review checklist](./references/review-checklist.md):
+For each file, apply domain-specific analysis using [review checklist](./references/checklist.md):
 
 #### C Source Files (*.c)
-1. **Memory Safety** (reference: [memory-patterns.md](./references/memory-patterns.md))
+1. **Memory Safety** (reference: [safety-patterns.md](./references/safety-patterns.md))
    - New allocations → verify corresponding free
    - Modem callback paths → check pointer lifetime
    - QMI/MBIM response buffers → bounds checking
 
-2. **Thread Safety** (reference: [thread-patterns.md](./references/thread-patterns.md))
+2. **Thread Safety** (reference: [safety-patterns.md](./references/safety-patterns.md))
    - Shared modem context access → mutex protection
    - State transitions → lock ordering consistency
    - Callbacks under lock → deadlock potential
