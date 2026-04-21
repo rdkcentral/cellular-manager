@@ -208,4 +208,4 @@ sequenceDiagram
 
 - docs/workflows.md
 - docs/troubleshooting.md (log signatures & RCA workflow)
-- docs/reference/tr181-ownership-matrix.md
+- docs/reference/tr181-matrix.md
