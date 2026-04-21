@@ -97,7 +97,7 @@ qmi_register_indication(ctx->handle, on_indication);  // Fires immediately → d
 2. **Pointer casts**: Use `uintptr_t`, not `long`
 3. **Endianness**: Use `htonl`/`ntohl` for wire-format data
 4. **Structure packing**: `__attribute__((packed))` for wire-format structs
-5. **Vendor abstraction**: `#ifdef HAVE_QMI_SUPPORT` guards
+5. **Vendor abstraction**: `#ifdef QMI_SUPPORT` guards
 6. **System headers**: Platform-specific headers behind `#ifdef`
 
 ---
