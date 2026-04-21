@@ -62,6 +62,6 @@ This matrix maps major Device.Cellular ownership areas to implementation files a
 When changing any Device.Cellular parameter behavior:
 
 1. Update this matrix with file-level ownership changes.
-2. Update docs/api and troubleshooting references where affected.
+2. Update docs/reference/ and troubleshooting references where affected.
 3. Add or update at least one L1 test for the touched ownership path.
 4. Validate RBUS publication impact if the field is evented.
