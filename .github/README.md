@@ -104,25 +104,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE).
-# Cellular Manager
-
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../LICENSE)
-[![C](https://img.shields.io/badge/Language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
-[![Platform](https://img.shields.io/badge/Platform-Embedded%20Linux-orange.svg)](https://www.yoctoproject.org/)
-
-A cellular connectivity management daemon for RDK (Reference Design Kit) embedded devices.
-
-## Overview
-
-Cellular Manager provides modem lifecycle management, SIM validation, network registration, APN/PDP context control, and data-session recovery for resource-constrained embedded gateways.
-
-### Key Features
-
-- **Modem Lifecycle**: Automated bring-up, registration, data-call, and recovery
-- **HAL Abstraction**: QMI-centric modem interface with upper-layer abstraction for portability
-- **State Machine**: Observable transitions across `DOWN`, `DEACTIVATED`, `DEREGISTERED`, `REGISTERED`, `CONNECTED`
-- **Platform-Independent**: Runs on ARM, MIPS, and x86 embedded Linux targets
-
 ### Architecture Highlights
 
 ```mermaid
