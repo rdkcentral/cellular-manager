@@ -55,8 +55,8 @@ Cellular Manager is an RDK daemon (`cellularmanager`) managing the full lifecycl
 3. `CellularMgr_MessageBus_Init()` → CCSP bus
 4. `CellularMgr_Init()` → component interfaces → `CellularMgr_RegisterComponent()` → DML handlers
 5. DML init: allocate `CELLULAR_DML_INFO`, read syscfg `cellularmgr_enable`, parse `/etc/partners_defaults.json`
-6. `cellular_hal_init()` → QMI device open state machine
-7. `CellularMgr_Start_State_Machine` (non-lite) → dedicated SM thread
+6. `cellular_hal_init()` → initialize HAL/QMI context defaults (for example, default profile/context setup)
+7. `CellularMgr_Start_State_Machine` (non-lite) → dedicated SM thread; the actual modem/QMI device open sequence starts later in the state machine via `cellular_hal_open_device()`
 8. RBUS monitor thread (when `RBUS_BUILD_FLAG_ENABLE`)
 
 ## 4. State Machine
