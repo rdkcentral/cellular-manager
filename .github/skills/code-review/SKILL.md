@@ -173,10 +173,9 @@ graph TD
 ### Step 7: Cross-Reference with Project Context
 
 Load project-specific context:
-1. [Review checklist](./references/review-checklist.md)
+1. [Review checklist](./references/checklist.md)
 2. [Common pitfalls](./references/common-pitfalls.md)
-3. [Memory patterns](./references/memory-patterns.md)
-4. [Thread patterns](./references/thread-patterns.md)
+3. [Safety patterns](./references/safety-patterns.md)
 
 ### Step 8: Generate Recommendations
 
