@@ -68,10 +68,6 @@ fi
 # GOOD: Use set -e for fail-fast
 set -e  # Exit on any error
 set -u  # Exit on undefined variable
-# OPTIONAL: Enable pipefail only on shells that support it
-if (set -o pipefail) 2>/dev/null; then
-    set -o pipefail  # Catch errors in pipes when supported
-fi
 
 # GOOD: Trap for cleanup
 cleanup() {
