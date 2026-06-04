@@ -10,9 +10,9 @@
 
 The current `X_RDK_RadioEnvConditions` TR-181 parameter uses **RSRP-only** thresholds to classify the cellular radio environment. Field testing across **76 devices** with successful speedtests revealed that this single-metric approach has only **22.4% accuracy** at predicting throughput-based quality and produces **non-monotonic** results (devices classified as POOR achieve higher average throughput than those classified as EXCELLENT).
 
-A proposed **multi-metric weighted formula** (RSRP×35% + RSRQ×35% + SNR×25% + RSSI×5%) using step-table scoring improves accuracy to **44.7%** with **81.6% within-1-level** accuracy. However, analysis shows that **no RF metric meaningfully correlates with throughput** (all |r| < 0.21) in this dataset due to lightly-loaded cells.
+A proposed [**multi-metric weighted formula**](#4-proposed-algorithm) (RSRP×35% + RSRQ×35% + SNR×25% + RSSI×5%) using step-table scoring improves accuracy to **44.7%** with **81.6% within-1-level** accuracy. However, analysis shows that [**no RF metric meaningfully correlates with throughput**](#6-correlation-analysis--all-available-metrics) (all |r| < 0.21) in this dataset due to [lightly-loaded cells](#8-why-rf-metrics-dont-predict-throughput-in-this-dataset).
 
-**Recommendation:** Adopt the final **linear interpolation algorithm** (45/30/20/5 weights, 75/60/40/20 classification thresholds) for `X_RDK_RadioEnvConditions`. It achieves 80.8% exact accuracy (vs 22.4% baseline), correctly characterizes RF environment health, and detects interference/congestion cases that RSRP alone misses.
+**Recommendation:** Adopt the final [**linear interpolation algorithm**](#91-adopt-linear-multi-metric-algorithm-final) (45/30/20/5 weights, 75/60/40/20 classification thresholds) for `X_RDK_RadioEnvConditions`. It achieves 80.8% exact accuracy (vs [22.4% baseline](#32-performance)), correctly characterizes RF environment health, and detects [interference/congestion cases](#8-why-rf-metrics-dont-predict-throughput-in-this-dataset) that RSRP alone misses.
 
 ---
 
@@ -64,7 +64,7 @@ A proposed **multi-metric weighted formula** (RSRP×35% + RSRQ×35% + SNR×25% +
 | FAIR (-95 to -105) | 26 | 125.9 | 17.5 | 201.4 |
 | POOR (-105 to -115) | 12 | 123.8 | 23.2 | 205.5 |
 
-**Key Observation:** Average throughput is HIGHER for GOOD/FAIR/POOR than EXCELLENT. The current algorithm has no predictive power for throughput.
+**Key Observation:** Average throughput is HIGHER for GOOD/FAIR/POOR than EXCELLENT. The current algorithm has no predictive power for throughput (see [§8 — Why RF Metrics Don't Predict Throughput](#8-why-rf-metrics-dont-predict-throughput-in-this-dataset)).
 
 **Upload Speed by RSRP-Only Category:**
 
@@ -168,7 +168,7 @@ A comprehensive sweep of all weight combinations (step=5%, sum=100%) was perform
 | Equal 3-way | 33/33/34/0 | 42.1 | 77.6 | 0% | Poor monotonicity |
 | SNR-Only | 0/0/100/0 | 42.1 | 72.4 | — | Missing congestion info |
 
-**Why RSSI-dominant (60.5%) was rejected:** It classifies 75% of devices as EXCELLENT trivially. RSSI includes noise+interference and is the least useful LTE metric. It would not detect congested environments.
+**Why RSSI-dominant (60.5%) was rejected:** It classifies 75% of devices as EXCELLENT trivially. RSSI includes noise+interference and is the least useful LTE metric. It would not detect congested environments. See also [§9.2 Rationale](#92-rationale) for the final weight selection.
 
 ---
 
@@ -224,8 +224,8 @@ All radio signal metrics (RSRP, RSRQ, SNR, RSSI) individually and in combination
 | **TimingAdvance_us** | ❌ Confirmed unavailable | `nas-get-cell-location-info` reports `UE In Idle: yes` and `LTE Timing Advance: unavailable` even while speedtest is actively running. Modem firmware limitation — not a collection timing issue. |
 | **Carrier Aggregation (active)** | ❌ Not observed | All devices showed CA=No or No_Deconfigured during idle query |
 | **Network Load / PRB Utilization** | ❌ Not available | Not exposed via QMI/HAL — would require eNB-side data |
-| **BLER (Block Error Rate)** | ❌ Not collected | Available via `--nas-get-signal-info` extended but not in script |
-| **CQI (Channel Quality Indicator)** | ❌ Not collected | Requires connected-mode query, modem-specific |
+| **BLER (Block Error Rate)** | ❌ Not accessible | Only available via Qualcomm DIAG interface — not exposed via qmicli or AT commands on production XLE |
+| **CQI (Channel Quality Indicator)** | ❌ Not accessible | UE→eNB feedback only; requires Qualcomm DIAG interface — not available on production XLE |
 | **MIMO Rank/Layers** | ❌ Not collected | Would indicate spatial multiplexing capability |
 | **Scheduler Type / MCS** | ❌ Not available | eNB-side information |
 | **Backhaul Quality** | ❌ Not measurable | Would explain the Ping correlation |
@@ -233,9 +233,9 @@ All radio signal metrics (RSRP, RSRQ, SNR, RSSI) individually and in combination
 
 ### 7.1 Items That Could Improve Analysis (Future Work)
 
-1. ~~**Tower Distance** — Re-collect during active state~~ → **Confirmed: Not possible.** QMI firmware reports TA as unavailable even during active speedtest (verified June 4, 2026)
-2. **BLER / Retransmission rate** — Better indicator of real RF impairment
-3. **CQI** — Directly maps to achievable throughput in the cell
+1. ~~**Tower Distance** — Re-collect during active state~~ → **Closed.** QMI firmware reports TA as unavailable even during active speedtest (verified June 4, 2026)
+2. ~~**BLER / Retransmission rate**~~ → **Closed.** Not accessible via qmicli — only via Qualcomm DIAG interface (not available on production XLE)
+3. ~~**CQI**~~ → **Closed.** Not accessible — UE→eNB feedback only, requires Qualcomm DIAG interface
 4. **Test on congested cells** — Current dataset is all low-load; RF metrics would matter more under congestion
 5. **Time-of-day variation** — All tests within short window; peak-hour data may show different correlations
 
@@ -279,7 +279,7 @@ A follow-up re-test of 4 devices (one per RF category) at a different time confi
 
 ### 8.4 Conclusion
 
-`RadioEnvConditions` should classify **RF environment health** (for reliability, handover decisions, failover triggers), NOT predict throughput. The two are only correlated under congestion, which cannot be measured from the UE.
+`RadioEnvConditions` should classify **RF environment health** (for reliability, handover decisions, failover triggers), NOT predict throughput. The two are only correlated under congestion, which cannot be measured from the UE. See [§9.3](#93-what-radioEnvconditions-tells-the-system) and [§9.4](#94-what-it-does-not-tell) for intended semantics.
 
 ---
 
@@ -353,5 +353,5 @@ return CRITICAL;
 
 1. ~~**Tower Distance collection**~~ — **Closed.** QMI firmware confirmed unable to report TA regardless of RRC state
 2. ~~**Cell congestion testing**~~ — **Closed.** Re-test of 4 devices confirmed non-correlation persists at different times. Direct congestion metrics (PRB utilization, user count) are not available from UE side.
-3. **Implementation** — Apply proposed algorithm in `cellularmgr_cellular_apis.c`
+3. **Implementation** — Apply [final linear algorithm](#91-adopt-linear-multi-metric-algorithm-final) in `cellularmgr_cellular_apis.c`
 4. **Optional: Peak-hour validation** — Test during 7–9 PM peak hours on known busy cells if congestion correlation evidence is still desired (low priority — unlikely to change recommendation)
