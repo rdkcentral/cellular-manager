@@ -1,0 +1,222 @@
+Total rows: 78
+Successful (with speedtest): 76
+Failed/unreachable: 2
+
+================================================================================
+EXISTING RSRP-ONLY (RadioEnvConditions from device) vs THROUGHPUT
+================================================================================
+
+Existing Score N     Avg DL    Min      Max      StdDev   Throughput Distribution
+------------------------------------------------------------------------------------------
+EXCELLENT    22    101.0     21.4     186.9    42.0     {'EXCELLENT': 13, 'GOOD': 6, 'FAIR': 2, 'POOR': 1}
+GOOD         16    137.2     64.5     197.6    43.0     {'EXCELLENT': 13, 'GOOD': 3}
+FAIR         26    125.9     17.5     201.4    42.0     {'EXCELLENT': 19, 'GOOD': 6, 'POOR': 1}
+POOR         12    123.8     23.2     205.5    47.6     {'EXCELLENT': 10, 'GOOD': 1, 'POOR': 1}
+
+RSRP-Only Accuracy: 22.4% exact, 56.6% within-1-level (n=76)
+
+================================================================================
+PROPOSED WEIGHTED FORMULA (from X_RDK_RadioEnvConditions_analysis.md)
+================================================================================
+
+--- Option A (Step Tables): RSRP*35 + RSRQ*35 + SNR*25 + RSSI*5 ---
+Weighted Score N     Avg DL    Min      Max      Throughput Distribution
+--------------------------------------------------------------------------------
+EXCELLENT    37    118.7     21.4     197.6    {'EXCELLENT': 26, 'GOOD': 8, 'FAIR': 2, 'POOR': 1}
+GOOD         30    121.5     17.5     205.5    {'EXCELLENT': 20, 'GOOD': 8, 'POOR': 2}
+FAIR         6     119.2     103.1    143.8    {'EXCELLENT': 6}
+POOR         2     137.7     125.4    150.0    {'EXCELLENT': 2}
+CRITICAL     1     151.4     151.4    151.4    {'EXCELLENT': 1}
+
+Option A Accuracy: 44.7% exact, 81.6% within-1-level (n=76)
+
+--- Option B (Linear Interp): RSRP*35 + RSRQ*35 + SNR*25 + RSSI*5 ---
+Weighted Score N     Avg DL    Min      Max      Throughput Distribution
+--------------------------------------------------------------------------------
+EXCELLENT    17    95.6      21.4     186.9    {'EXCELLENT': 9, 'GOOD': 5, 'FAIR': 2, 'POOR': 1}
+GOOD         18    142.3     74.0     197.6    {'EXCELLENT': 16, 'GOOD': 2}
+FAIR         28    126.8     64.5     205.5    {'EXCELLENT': 19, 'GOOD': 9}
+POOR         11    105.8     17.5     150.0    {'EXCELLENT': 9, 'POOR': 2}
+CRITICAL     2     138.4     125.4    151.4    {'EXCELLENT': 2}
+
+Option B Accuracy: 17.1% exact, 56.6% within-1-level (n=76)
+
+================================================================================
+ALTERNATIVE PARAMETER COMBINATIONS
+================================================================================
+
+Algorithm                        Exact%    Within1%   N     Corr(score,DL)
+---------------------------------------------------------------------------
+RSRP-Only (existing)             22.4      56.6       76    -0.181
+Proposed A (35/35/25/5)          44.7      81.6       76    -0.083
+Proposed B (linear 35/35/25/5)   17.1      56.6       76    -0.122
+SNR-Heavy (20/20/50/10)          44.7      80.3       76    -0.071
+RSRQ-Heavy (20/50/25/5)          48.7      80.3       76    -0.045
+Equal 3-way (33/33/34/0)         42.1      77.6       76    -0.080
+SNR-Only                         42.1      72.4       76    -0.047
+
+================================================================================
+PARAMETER CORRELATION WITH THROUGHPUT (Pearson r)
+================================================================================
+
+Parameter                 r vs DL_Mbps   N
+--------------------------------------------------
+RSRP (idle)               -0.1962        76
+RSRQ (idle)               0.0109         76
+SNR (idle)                -0.1266        76
+RSSI (idle)               -0.1780        76
+BandBW MHz                -0.0737        76
+RSRP (during test)        -0.2095        76
+RSRQ (during test)        -0.1641        76
+SNR (during test)         -0.0614        76
+
+================================================================================
+THROUGHPUT BY BAND
+================================================================================
+
+Band           N     Avg DL    Min      Max      StdDev
+-------------------------------------------------------
+eutran-4       49    126.1     23.2     205.5    41.5
+eutran-2       14    118.2     21.4     186.9    47.0
+eutran-13      7     106.8     29.9     186.2    51.9
+eutran-66      6     99.4      17.5     151.7    53.7
+
+================================================================================
+KEY MISMATCHES: RSRP=POOR/FAIR but throughput=EXCELLENT
+================================================================================
+
+#    RSRP   RSRQ   SNR    RSSI   Band       BW   DL Mbps   Existing   OptA       TrueTP
+-------------------------------------------------------------------------------------
+93   -113   -11    8.2    -81    eutran-4   10   205.53    POOR       GOOD       EXCELLENT
+62   -102   -10    9.0    -71    eutran-4   10   201.40    FAIR       GOOD       EXCELLENT
+52   -97    -11    10.4   -68    eutran-4   10   192.13    FAIR       GOOD       EXCELLENT
+84   -105   -11    6.8    -75    eutran-4   20   186.68    POOR       GOOD       EXCELLENT
+43   -95    -7     17.8   -68    eutran-4   10   181.80    FAIR       EXCELLENT  EXCELLENT
+58   -102   -11    2.6    -67    eutran-4   10   177.79    FAIR       GOOD       EXCELLENT
+65   -98    -12    3.8    -68    eutran-4   10   166.21    FAIR       GOOD       EXCELLENT
+75   -102   -7     7.0    -78    eutran-66  20   151.66    FAIR       GOOD       EXCELLENT
+88   -117   -20    -5.2   -77    eutran-4   20   151.36    POOR       CRITICAL   EXCELLENT
+61   -97    -11    17.2   -74    eutran-66  10   149.96    FAIR       GOOD       EXCELLENT
+71   -99    -19    -2.2   -63    eutran-2   20   149.96    FAIR       POOR       EXCELLENT
+73   -101   -10    16.4   -70    eutran-4   10   148.71    FAIR       GOOD       EXCELLENT
+94   -111   -16    3.0    -79    eutran-4   10   143.77    POOR       FAIR       EXCELLENT
+51   -96    -12    4.6    -65    eutran-13  10   140.26    FAIR       GOOD       EXCELLENT
+59   -100   -11    6.8    -69    eutran-4   10   137.34    FAIR       GOOD       EXCELLENT
+96   -114   -13    4.8    -79    eutran-4   10   135.82    POOR       FAIR       EXCELLENT
+69   -103   -15    4.2    -69    eutran-4   10   130.02    FAIR       GOOD       EXCELLENT
+33   -95    -10    16.4   -71    eutran-66  10   129.83    FAIR       EXCELLENT  EXCELLENT
+57   -103   -13    1.4    -69    eutran-2   10   128.17    FAIR       GOOD       EXCELLENT
+63   -98    -12    6.6    -63    eutran-2   10   127.87    FAIR       GOOD       EXCELLENT
+91   -115   -18    1.2    -78    eutran-13  10   125.41    POOR       POOR       EXCELLENT
+74   -100   -13    3.6    -63    eutran-4   10   121.89    FAIR       GOOD       EXCELLENT
+89   -109   -15    3.2    -81    eutran-2   10   115.18    POOR       FAIR       EXCELLENT
+85   -109   -14    3.8    -77    eutran-4   20   111.75    POOR       FAIR       EXCELLENT
+68   -99    -11    15.4   -70    eutran-4   10   110.89    FAIR       GOOD       EXCELLENT
+48   -99    -11    18.0   -70    eutran-4   10   105.66    FAIR       GOOD       EXCELLENT
+70   -101   -16    5.4    -71    eutran-13  10   105.50    FAIR       FAIR       EXCELLENT
+87   -112   -15    -0.2   -77    eutran-13  10   103.12    POOR       FAIR       EXCELLENT
+95   -109   -9     1.0    -81    eutran-4   10   101.77    POOR       GOOD       EXCELLENT
+
+================================================================================
+WEIGHT COMBINATION SWEEP (RSRP/RSRQ/SNR/RSSI)
+================================================================================
+
+Sweeping weight combinations in steps of 5, total=100...
+Filter: must have >=2 devices in at least 3 categories (meaningful spread)
+
+Weights (P/Q/S/I)      Exact%    Within1%   Corr     Monotonic  Spread
+---------------------------------------------------------------------------
+0/5/0/95               60.5      90.8       -0.055   100        3cat
+0/10/0/90              60.5      90.8       -0.051   100        3cat
+0/15/0/85              60.5      90.8       -0.046   100        3cat
+0/20/0/80              60.5      90.8       -0.041   100        3cat
+5/20/0/75              60.5      90.8       -0.051   100        3cat
+0/25/0/75              59.2      90.8       -0.035   100        3cat
+0/30/0/70              59.2      90.8       -0.030   100        3cat
+5/25/0/70              59.2      90.8       -0.046   100        3cat
+5/30/0/65              59.2      90.8       -0.041   100        3cat
+0/30/5/65              57.9      90.8       -0.031   100        3cat
+0/35/0/65              56.6      90.8       -0.024   100        3cat
+0/40/0/60              56.6      90.8       -0.019   100        3cat
+5/35/0/60              56.6      90.8       -0.035   100        3cat
+0/15/5/80              56.6      89.5       -0.047   100        3cat
+0/20/5/75              55.3      90.8       -0.042   100        3cat
+0/25/5/70              55.3      90.8       -0.036   100        3cat
+0/25/10/65             55.3      89.5       -0.037   100        3cat
+5/25/5/65              55.3      89.5       -0.047   100        3cat
+5/80/0/15              56.6      85.5       0.007    75         4cat
+5/85/0/10              56.6      85.5       0.010    75         4cat
+5/95/0/0               56.6      85.5       0.016    75         4cat
+10/75/0/15             56.6      85.5       -0.005   75         4cat
+10/75/5/10             56.6      85.5       -0.006   75         4cat
+10/80/0/10             56.6      85.5       -0.002   75         4cat
+10/80/5/5              56.6      85.5       -0.002   75         4cat
+
+  BEST Exact Match (3+cat): 0/5/0/95 → 60.5% exact, 90.8% within-1, mono=100%
+  BEST Within-1 (3+cat):    0/5/0/95 → 60.5% exact, 90.8% within-1, mono=100%
+  BEST Monotonic (3+cat):   0/5/0/95 → 60.5% exact, 90.8% within-1, mono=100%
+
+================================================================================
+DETAILED BREAKDOWN: TOP 5 WEIGHT COMBINATIONS
+================================================================================
+
+--- #1: Weights RSRP=0 RSRQ=5 SNR=0 RSSI=95 ---
+    Exact=60.5%, Within1=90.8%, Monotonic=100%
+    EXCELLENT    N=57  AvgDL=  124.4  MinDL=  21.4  {'EXCELLENT': 42, 'GOOD': 12, 'FAIR': 2, 'POOR': 1}
+    GOOD         N=15  AvgDL=  109.8  MinDL=  23.2  {'EXCELLENT': 10, 'GOOD': 4, 'POOR': 1}
+    FAIR         N=4   AvgDL=  109.5  MinDL=  17.5  {'EXCELLENT': 3, 'POOR': 1}
+
+--- #2: Weights RSRP=0 RSRQ=10 SNR=0 RSSI=90 ---
+    Exact=60.5%, Within1=90.8%, Monotonic=100%
+    EXCELLENT    N=57  AvgDL=  124.4  MinDL=  21.4  {'EXCELLENT': 42, 'GOOD': 12, 'FAIR': 2, 'POOR': 1}
+    GOOD         N=15  AvgDL=  109.8  MinDL=  23.2  {'EXCELLENT': 10, 'GOOD': 4, 'POOR': 1}
+    FAIR         N=4   AvgDL=  109.5  MinDL=  17.5  {'EXCELLENT': 3, 'POOR': 1}
+
+--- #3: Weights RSRP=0 RSRQ=15 SNR=0 RSSI=85 ---
+    Exact=60.5%, Within1=90.8%, Monotonic=100%
+    EXCELLENT    N=57  AvgDL=  124.4  MinDL=  21.4  {'EXCELLENT': 42, 'GOOD': 12, 'FAIR': 2, 'POOR': 1}
+    GOOD         N=15  AvgDL=  109.8  MinDL=  23.2  {'EXCELLENT': 10, 'GOOD': 4, 'POOR': 1}
+    FAIR         N=4   AvgDL=  109.5  MinDL=  17.5  {'EXCELLENT': 3, 'POOR': 1}
+
+--- #4: Weights RSRP=0 RSRQ=20 SNR=0 RSSI=80 ---
+    Exact=60.5%, Within1=90.8%, Monotonic=100%
+    EXCELLENT    N=57  AvgDL=  124.4  MinDL=  21.4  {'EXCELLENT': 42, 'GOOD': 12, 'FAIR': 2, 'POOR': 1}
+    GOOD         N=15  AvgDL=  109.8  MinDL=  23.2  {'EXCELLENT': 10, 'GOOD': 4, 'POOR': 1}
+    FAIR         N=4   AvgDL=  109.5  MinDL=  17.5  {'EXCELLENT': 3, 'POOR': 1}
+
+--- #5: Weights RSRP=5 RSRQ=20 SNR=0 RSSI=75 ---
+    Exact=60.5%, Within1=90.8%, Monotonic=100%
+    EXCELLENT    N=57  AvgDL=  124.4  MinDL=  21.4  {'EXCELLENT': 42, 'GOOD': 12, 'FAIR': 2, 'POOR': 1}
+    GOOD         N=15  AvgDL=  109.8  MinDL=  23.2  {'EXCELLENT': 10, 'GOOD': 4, 'POOR': 1}
+    FAIR         N=4   AvgDL=  109.5  MinDL=  17.5  {'EXCELLENT': 3, 'POOR': 1}
+
+================================================================================
+THRESHOLD SWEEP (using best monotonic weight combo)
+================================================================================
+Weights: RSRP=0, RSRQ=5, SNR=0, RSSI=95
+
+Score range: 57.5 - 100.0
+Score distribution: mean=86.6, median=95.5
+
+Thresholds (E/G/F/P)      Exact%    Within1%   Mono%
+-------------------------------------------------------
+80/60/25/10                 60.5      90.8       100
+80/60/25/15                 60.5      90.8       100
+80/60/25/20                 60.5      90.8       100
+80/60/30/10                 60.5      90.8       100
+80/60/30/15                 60.5      90.8       100
+80/60/30/20                 60.5      90.8       100
+80/60/30/25                 60.5      90.8       100
+80/60/35/10                 60.5      90.8       100
+80/60/35/15                 60.5      90.8       100
+80/60/35/20                 60.5      90.8       100
+
+  BEST: Thresholds 80/60/25/10 → 60.5% exact, 90.8% within-1, mono=100%
+
+  Final distribution with weights 0/5/0/95 + thresholds 80/60/25/10:
+    EXCELLENT    N=57  AvgDL=  124.4  MinDL=  21.4  MaxDL= 201.4  {'EXCELLENT': 42, 'GOOD': 12, 'FAIR': 2, 'POOR': 1}
+    GOOD         N=15  AvgDL=  109.8  MinDL=  23.2  MaxDL= 205.5  {'EXCELLENT': 10, 'GOOD': 4, 'POOR': 1}
+    FAIR         N=4   AvgDL=  109.5  MinDL=  17.5  MaxDL= 151.4  {'EXCELLENT': 3, 'POOR': 1}
+
+
+Done.
