@@ -78,10 +78,10 @@ Re-run speedtests on a subset of the same devices at different times to detect l
 
 | # | XB_MAC | XLE_IP | Original Category | RSRP (dBm) | RSRQ (dB) | SNR (dB) | RSSI (dBm) |
 |---|---|---|---|---|---|---|---|
-| 1 | E4:BF:FA:FF:E5:A4 | 169.254.85.188 | EXCELLENT | -58 | -5 | 30.0 | -33 |
-| 2 | 1C:9D:72:27:4D:E4 | 169.254.1.200 | POOR | -114 | -12 | 0.8 | -79 |
-| 3 | E0:DB:D1:DC:7B:B7 | 169.254.85.199 | FAIR | -105 | -13 | 6.0 | -75 |
-| 4 | 48:4B:D4:67:51:27 | 169.254.1.33 | GOOD | -91 | -10 | 8.6 | -60 |
+| 1 | XX:XX:XX:XX:XX:XX | XX.XX.XX.XX | EXCELLENT | -58 | -5 | 30.0 | -33 |
+| 2 | XX:XX:XX:XX:XX:XX | XX.XX.XX.XX | POOR | -114 | -12 | 0.8 | -79 |
+| 3 | XX:XX:XX:XX:XX:XX | XX.XX.XX.XX | FAIR | -105 | -13 | 6.0 | -75 |
+| 4 | XX:XX:XX:XX:XX:XX | XX.XX.XX.XX | GOOD | -91 | -10 | 8.6 | -60 |
 
 ### 4.2 Results — Off-Peak (11:30 AM EDT / 15:30 UTC, June 4, 2026)
 
@@ -124,10 +124,10 @@ Re-run speedtests on a subset of the same devices at different times to detect l
 
 | Device | Category | Original DL | Re-Test DL | Change | RF Same? |
 |---|---|---|---|---|---|
-| E4:BF:FA:FF:E5:A4 | EXCELLENT | ~180 Mbps (est) | 39.04 | -78% | Yes (RSRP -58 both times) |
-| 1C:9D:72:27:4D:E4 | POOR | ~120 Mbps (est) | 37.06 | -69% | Yes (RSRP -114) |
-| E0:DB:D1:DC:7B:B7 | FAIR | ~130 Mbps (est) | 23.93 | -82% | Yes (RSRP -105) |
-| 48:4B:D4:67:51:27 | GOOD | ~140 Mbps (est) | 12.46 | -91% | Yes (RSRP -91) |
+| XX:XX:XX:XX:XX:XX | EXCELLENT | ~180 Mbps (est) | 39.04 | -78% | Yes (RSRP -58 both times) |
+| XX:XX:XX:XX:XX:XX | POOR | ~120 Mbps (est) | 37.06 | -69% | Yes (RSRP -114) |
+| XX:XX:XX:XX:XX:XX | FAIR | ~130 Mbps (est) | 23.93 | -82% | Yes (RSRP -105) |
+| XX:XX:XX:XX:XX:XX | GOOD | ~140 Mbps (est) | 12.46 | -91% | Yes (RSRP -91) |
 
 ### 6.2 Correlation (4 data points — indicative only)
 

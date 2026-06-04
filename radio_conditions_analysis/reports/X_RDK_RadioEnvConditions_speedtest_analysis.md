@@ -25,8 +25,8 @@ The current RSRP-only algorithm classifies radio environment using a single metr
 
 | Category | XB MAC | XLE IP | XLE MAC |
 |---|---|---|---|
-| EXCELLENT | D4:E2:CB:9D:58:A4 | 169.254.85.238 | d8:9c:8e:00:03:cf |
-| POOR | 1C:9E:CC:21:C0:A4 | 169.254.1.109 | d8:9c:8e:00:17:4f |
+| EXCELLENT | XX:XX:XX:XX:XX:XX | XX.XX.XX.XX | XX:XX:XX:XX:XX:XX |
+| POOR | XX:XX:XX:XX:XX:XX | XX.XX.XX.XX | XX:XX:XX:XX:XX:XX |
 
 ---
 

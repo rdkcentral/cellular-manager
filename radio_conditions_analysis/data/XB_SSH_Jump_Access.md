@@ -3,7 +3,7 @@
 Use the jump server below to access XB devices over SSH:
 
 ```text
-jump ssival030@96.118.217.151
+jump ntid@<jump host ip>
 ```
 
 After logging in:
@@ -24,6 +24,6 @@ ssh -y -i /tmp/.dropbearXLE root@<XLE_LINK_LOCAL_IP>
 
 ### Notes
 
-- The XLE link-local IP is **not** always `169.254.1.25` — parse the actual IP from the `arp -n` output (pick the entry with a real MAC, ignore `<incomplete>` entries).
+- The XLE link-local IP is **not** always `XX.XX.XX.XX` — parse the actual IP from the `arp -n` output (pick the entry with a real MAC, ignore `<incomplete>` entries).
 - Use `ssh -y` to auto-accept the host key (dropbear's equivalent of `StrictHostKeyChecking=no`).
 - **Skip TG4482PC2 (CommScope XB7)** devices — dropbear key auth to XLE fails on this platform. Works on **CGM4981COM (Technicolor XB8)** and similar.
