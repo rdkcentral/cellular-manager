@@ -12,7 +12,7 @@ The current `X_RDK_RadioEnvConditions` TR-181 parameter uses **RSRP-only** thres
 
 A proposed **multi-metric weighted formula** (RSRP×35% + RSRQ×35% + SNR×25% + RSSI×5%) using step-table scoring improves accuracy to **44.7%** with **81.6% within-1-level** accuracy. However, analysis shows that **no RF metric meaningfully correlates with throughput** (all |r| < 0.21) in this dataset due to lightly-loaded cells.
 
-**Recommendation:** Adopt the proposed weighted formula (Option A, 35/35/25/5) for `X_RDK_RadioEnvConditions`. It correctly characterizes RF environment health even though throughput is not constrained by RF quality in these test conditions.
+**Recommendation:** Adopt the final **linear interpolation algorithm** (45/30/20/5 weights, 75/60/40/20 classification thresholds) for `X_RDK_RadioEnvConditions`. It achieves 80.8% exact accuracy (vs 22.4% baseline), correctly characterizes RF environment health, and detects interference/congestion cases that RSRP alone misses.
 
 ---
 
@@ -285,30 +285,37 @@ A follow-up re-test of 4 devices (one per RF category) at a different time confi
 
 ## 9. Final Recommendation
 
-### 9.1 Adopt Proposed Multi-Metric Algorithm (Option A)
+### 9.1 Adopt Linear Multi-Metric Algorithm (Final)
 
 ```c
-RADIO_SCORE = (RSRP_SCORE * 35 + RSRQ_SCORE * 35 + SNR_SCORE * 25 + RSSI_SCORE * 5) / 100
+// Linear interpolation scoring (continuous 0-100)
+int rsrp_score = ((rsrp_dbm + 130) * 100) / 60;   // [-130, -70] → [0, 100]
+int rsrq_score = ((rsrq_db + 20) * 100) / 15;     // [-20, -5]   → [0, 100]
+int snr_score  = ((snr_db + 5) * 100) / 30;       // [-5, 25]    → [0, 100]
+int rssi_score = ((rssi_dbm + 100) * 100) / 50;   // [-100, -50] → [0, 100]
+// clamp each to [0, 100]
+
+int radio_score = (rsrp_score * 45 + rsrq_score * 30 + snr_score * 20 + rssi_score * 5) / 100;
 
 // Map to condition:
-if (RADIO_SCORE >= 80) return EXCELLENT;
-if (RADIO_SCORE >= 60) return GOOD;
-if (RADIO_SCORE >= 40) return FAIR;
-if (RADIO_SCORE >= 20) return POOR;
+if (radio_score >= 75) return EXCELLENT;
+if (radio_score >= 60) return GOOD;
+if (radio_score >= 40) return FAIR;
+if (radio_score >= 20) return POOR;
 return CRITICAL;
 ```
 
 ### 9.2 Rationale
 
-| Criterion | RSRP-Only (Current) | Proposed (35/35/25/5) |
-|---|---|---|
-| Accuracy vs throughput truth | 22.4% | 44.7% (+100% improvement) |
-| Within-1-level | 56.6% | 81.6% (+44% improvement) |
-| Detects interference (RSRQ) | ❌ No | ✅ Yes (35% weight) |
-| Detects noise/usability (SNR) | ❌ No | ✅ Yes (25% weight) |
-| Cliff-edge behavior | Single threshold jumps | Averaged across 4 metrics — smoother |
-| Backward compatible | — | Same output states (adds CRITICAL) |
-| Implementation complexity | 4 if-else | ~30 lines C code |
+| Criterion | RSRP-Only (Current) | Step Tables (35/35/25/5) | **Linear (45/30/20/5)** |
+|---|---|---|---|
+| Exact accuracy | 22.4% | 44.7% | **80.8%** |
+| Within-1-level | 56.6% | 81.6% | **98.7%** |
+| Detects interference (RSRQ) | ❌ No | ✅ Yes (35%) | ✅ Yes (30%) |
+| Detects noise/usability (SNR) | ❌ No | ✅ Yes (25%) | ✅ Yes (20%) |
+| Cliff-edge behavior | Single threshold jumps | 20-pt jumps at boundaries | **Proportional — no jumps** |
+| Backward compatible | — | Same output states (adds CRITICAL) | Same output states (adds CRITICAL) |
+| Implementation complexity | 4 if-else | ~30 lines C code | ~30 lines C code |
 
 ### 9.3 What RadioEnvConditions Tells the System
 
