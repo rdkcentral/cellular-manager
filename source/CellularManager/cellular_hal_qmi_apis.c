@@ -5806,7 +5806,7 @@ static void cellular_hal_qmi_profile_operation_step( GTask *task )
                     {
                         int i;
 
-                        if ((pstInputProfile->APN[0] == '\0') && (pstDefProfFromModem != NULL)) {
+                        if ((pstInputProfile->APN[0] == '\0') && (TRUE == wdsCtx->bIsDefaultProfileFromModemCached) && (pstDefProfFromModem->APN[0] != '\0')) {
                             CELLULAR_HAL_DBG_PRINT("%s %d - Incoming profile has invalid APN. Fallback to modem default profile\n", __FUNCTION__, __LINE__);
                             memset(pstInputProfile, 0, sizeof(CellularProfileStruct));
                             memcpy(pstInputProfile, pstDefProfFromModem, sizeof(CellularProfileStruct));
