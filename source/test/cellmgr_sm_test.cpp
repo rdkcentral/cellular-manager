@@ -38,6 +38,7 @@ extern "C"
 INT sysevent_fd;
 token_t sysevent_token;
 int CellularMgrDeviceOpenStatusCBForSM(char *device_name, char *wan_ifname, CellularDeviceOpenStatus_t device_open_status, CellularModemOperatingConfiguration_t modem_operating_mode );
+int CellularMgr_InitializeContextDefaultProfile( CellularContextInitInputStruct *pstCtxInputStruct );
 CellularPolicySmState_t StateRegistered( void );
 extern CellularMgrPolicyCtrlSMStruct      *gpstCellularPolicyCtrl;
 CellularPolicySmState_t StateDeregistered( void );
